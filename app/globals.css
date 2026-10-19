@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{color-scheme:dark;--bg:#08080d;--panel:#111119;--line:#282535;--muted:#9693a6;--white:#f7f5ff;--purple:#a78bfa;--violet:#7c3aed}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;background:radial-gradient(ellipse at 80% -12%,rgba(124,58,237,.22),transparent 38%),var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit}
+.shell{width:min(100% - 32px,920px);margin:0 auto;padding:env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom))}
+.topbar{height:74px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);gap:12px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--white);text-decoration:none;font-weight:900;letter-spacing:.1em;font-size:18px}
+.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#b7a0ff,#7137e9);color:#100a20;font-weight:900;font-size:20px;font-family:"Barlow Condensed",sans-serif;letter-spacing:0}
+.brand-dot{color:var(--purple)}
+.top-pill,.touch-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #342846;background:rgba(124,58,237,.1);border-radius:999px;padding:8px 11px;color:#d8ceff;font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.live-dot{width:7px;height:7px;background:#b9a1ff;box-shadow:0 0 10px #a78bfa;border-radius:100%}
+.intro{padding:40px 0 22px}
+.eyebrow{margin:0 0 10px;color:var(--purple);font-size:10px;font-weight:800;letter-spacing:.22em}
+h1,h2,p{margin-top:0}
+h1{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(46px,9vw,80px);line-height:.88;letter-spacing:-.025em;margin:0;text-transform:uppercase;font-weight:900}
+h1 span{color:var(--purple)}
+.subtitle{margin:17px 0 0;color:#aaa6ba;font-size:14px;line-height:1.6}
+.game-card,.controls-panel{border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 45%),var(--panel);border-radius:20px;overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.2)}
+.canvas-wrap{height:clamp(390px,65vh,590px);min-height:390px;background:#15132a;position:relative}
+canvas{width:100%;height:100%;display:block;touch-action:none}
+.telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:17px 14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);gap:10px}
+.telemetry-item{display:flex;flex-direction:column;gap:7px;min-width:0}
+.telemetry-item+ .telemetry-item{border-left:1px solid var(--line);padding-left:14px}
+.telemetry-item>span{font-size:9px;font-weight:800;letter-spacing:.13em;color:var(--muted)}
+.telemetry-item strong{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(16px,3.5vw,25px);font-weight:700;white-space:nowrap}
+.telemetry-item small{font-family:Inter,sans-serif;font-size:10px;color:var(--muted);font-weight:600}
+.game-actions{display:flex;gap:10px;padding:14px}
+.start-button,.reset-button{height:48px;border-radius:12px;border:1px solid transparent;font-size:12px;font-weight:900;letter-spacing:.07em;cursor:pointer;touch-action:manipulation}
+.start-button{flex:1;color:#100a1f;background:linear-gradient(135deg,#c3afff,#8d65f2);box-shadow:0 5px 24px rgba(124,58,237,.2)}
+.start-button:active,.control:active{transform:scale(.98)}
+.pause-button{background:#262034;color:#ede8ff;border-color:#403451;box-shadow:none}
+.reset-button{width:106px;color:#e5defb;background:#191622;border-color:#393044}
+.lap-row{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.1em;gap:12px}
+.lap-row b{margin-left:5px;color:#ede8ff;font-size:11px;letter-spacing:0}
+.controls-panel{margin-top:18px;padding:20px}
+.controls-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.controls-heading h2{font-family:"Barlow Condensed",Impact,sans-serif;font-size:32px;margin:0;font-weight:800;letter-spacing:.01em}
+.touch-badge{font-size:9px;padding:7px 9px}
+.controls-layout{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:22px}
+.steering,.pedals{display:flex;align-items:center;gap:10px}
+.control{height:76px;min-width:76px;padding:8px 11px;border:1px solid #403451;border-radius:16px;background:linear-gradient(145deg,#282238,#17141f);color:#f1ecff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:22px;font-weight:900;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.control span{font-size:9px;letter-spacing:.1em;font-weight:900}
+.brake-control{background:linear-gradient(145deg,#3b202b,#1f151b);border-color:#5b303d;color:#ffb5c3}
+.gas-control{background:linear-gradient(145deg,#5535a0,#2b1a51);border-color:#7855c3;color:#e8deff}
+.hint{color:var(--muted);font-size:11px;line-height:1.65;margin:18px 0 0}
+.footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:24px 3px 0;color:#827d92;font-size:9px;font-weight:800;letter-spacing:.11em}
+.footer>span:first-child{color:#dcd5ef;font-size:11px}
+@media(min-width:700px){.intro{padding-top:54px}.game-card{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,.8fr);align-items:stretch}.canvas-wrap{grid-row:span 4;height:540px;min-height:0}.telemetry{align-content:end;grid-template-columns:1fr;padding:22px;border-top:0}.telemetry-item+.telemetry-item{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.telemetry-item strong{font-size:29px}.game-actions{align-self:end;padding:0 22px 16px}.lap-row{padding:0 22px 22px}.controls-layout{justify-content:flex-start;gap:48px}.control{min-width:92px;height:84px}}
+@media(max-width:420px){.shell{width:calc(100% - 20px)}.topbar{height:62px}.intro{padding-top:31px}.canvas-wrap{height:440px;min-height:440px}.controls-panel{padding:15px}.controls-layout{gap:8px}.steering,.pedals{gap:7px}.control{min-width:0;width:68px;height:72px;padding:7px 4px;border-radius:13px}.control span{font-size:8px}.telemetry{padding:14px 9px}.telemetry-item+.telemetry-item{padding-left:9px}.telemetry-item>span{font-size:8px}.lap-row{font-size:8px}.reset-button{width:86px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
