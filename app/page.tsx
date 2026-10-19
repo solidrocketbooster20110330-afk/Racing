@@ -26,6 +26,10 @@ export default function HomePage() {
   const [message, setMessage] = useState("READY ON THE GRID");
   const [trackState, setTrackState] = useState("ON TRACK");
   const [progress, setProgress] = useState(0);
+  const [miniMapPath, setMiniMapPath] = useState("");
+  const [miniMapPosition, setMiniMapPosition] = useState({ x: 80, y: 55 });
+  const [trackGuide, setTrackGuide] = useState(false);
+  const trackGuideRef = useRef(false);
   const [steeringAssist, setSteeringAssist] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const steeringAssistRef = useRef(false);
@@ -104,6 +108,15 @@ export default function HomePage() {
     ];
     const centerCurve = new THREE.CatmullRomCurve3(trackPoints, true, "centripetal");
     const samples = centerCurve.getSpacedPoints(900);
+    const mapSamples = samples.slice(0, -1);
+    const minX = Math.min(...mapSamples.map(p => p.x));
+    const maxX = Math.max(...mapSamples.map(p => p.x));
+    const minZ = Math.min(...mapSamples.map(p => p.z));
+    const maxZ = Math.max(...mapSamples.map(p => p.z));
+    const mapCoords = mapSamples.map(p => ({ x: 8 + ((p.x - minX) / Math.max(1, maxX - minX)) * 144, y: 8 + ((maxZ - p.z) / Math.max(1, maxZ - minZ)) * 94 }));
+    const mapPath = mapCoords.map((p, i) => (i === 0 ? "M " : "L ") + p.x.toFixed(2) + " " + p.y.toFixed(2)).join(" ") + " Z";
+    setMiniMapPath(mapPath);
+    setMiniMapPosition(mapCoords[0]);
     const offsetPoints = (distance: number) => samples.slice(0, -1).map((p, i) => {
       const tangent = samples[(i + 1) % (samples.length - 1)].clone().sub(samples[(i - 1 + samples.length - 1) % (samples.length - 1)]).normalize();
       return new THREE.Vector2(p.x - tangent.z * distance, p.z + tangent.x * distance);
@@ -214,7 +227,8 @@ export default function HomePage() {
       const center = centerCurve.getPointAt(u);
       const tangent = centerCurve.getTangentAt(u).normalize();
       const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
-      car.position.set(center.x + normal.x * sim.lateral, 0, center.z + normal.z * sim.lateral);
+      const guidedLateral = trackGuideRef.current ? sim.lateral * 0.25 : sim.lateral;
+      car.position.set(center.x + normal.x * guidedLateral, 0, center.z + normal.z * guidedLateral);
       car.rotation.y = Math.atan2(tangent.x, tangent.z) + sim.steer * 0.08;
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
       const behind = new THREE.Vector3(0, 18, -44).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y).add(car.position);
@@ -265,6 +279,10 @@ export default function HomePage() {
         sim.lateralVelocity += sim.steer * (5.2 + sim.speed / 95) * baseGrip * steeringAuthority * dt;
         sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.0 : 2.2));
         sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -15, 15);
+        if (trackGuideRef.current) {
+          sim.lateral *= Math.max(0, 1 - dt * 1.6);
+          sim.lateralVelocity *= Math.max(0, 1 - dt * 2.0);
+        }
         sim.offTrack = Math.abs(sim.lateral) > 8.8;
         if (sim.offTrack) {
           sim.speed = Math.max(0, sim.speed - 58 * dt);
@@ -284,7 +302,10 @@ export default function HomePage() {
           setSpeed(Math.round(sim.speed)); setGear(clamp(Math.floor(sim.speed / 42) + 1, 1, 8));
           setRpm(Math.round(3500 + (sim.speed % 42) / 42 * 5500));
           setLapTime(fmtTime(sim.lapElapsed)); setTrackState(sim.offTrack ? "OFF TRACK · LOW GRIP" : "ON TRACK");
-          setProgress(Math.round(sim.angle / (Math.PI * 2) * 100)); sim.lastUi = now;
+          setProgress(Math.round(sim.angle / (Math.PI * 2) * 100));
+          const mapIndex = Math.min(mapCoords.length - 1, Math.floor(u * mapCoords.length));
+          setMiniMapPosition(mapCoords[mapIndex]);
+          sim.lastUi = now;
         }
       }
       updateCarAndCamera(); renderer.render(scene, camera);
@@ -336,7 +357,7 @@ export default function HomePage() {
       <section className="sim-intro"><p className="sim-eyebrow">SINGLE-SEATER • CHASE CAMERA</p><h1>OWN THE <span>RACING LINE.</span></h1><p>Build speed on the straights. Brake early. Keep the car on the racing line.</p></section>
       <section className="sim-game" aria-label="3D driving simulator">
         <div className="sim-view" onPointerDown={() => { if (!running) start(); }}><div className="sim-world" ref={mountRef} />
-          <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="실제 서킷 배치"><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#b8a2ef" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round"/><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#34313f" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round"/><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#e9e3f7" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity=".8"/><circle cx="12" cy="72" r="4" fill="#b99aff"/><text x="19" y="68" fill="#fff" fontSize="6" fontWeight="700">START</text></svg></div>
+          <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="실제 주행 경로 미니맵"><path d={miniMapPath} fill="rgba(182,154,255,.1)" stroke="#b8a2ef" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round"/><path d={miniMapPath} fill="none" stroke="#312c3b" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/><circle cx={miniMapPosition.x} cy={miniMapPosition.y} r="4" fill="#fff" stroke="#8c5cff" strokeWidth="2"/><circle cx={miniMapPosition.x} cy={miniMapPosition.y} r="7" fill="none" stroke="#cbb8ff" strokeWidth="1" opacity=".7"/></svg></div>
           <div className="sim-overlay sim-overlay-top"><span className={trackState.startsWith("OFF") ? "state-warning" : ""}>{trackState}</span><span>SESSION · PRACTICE</span></div>
           <div className="speed-hud"><strong>{speed}</strong><span>KM/H</span><i>GEAR <b>{gear}</b></i></div>
           <div className="rpm-hud"><span>RPM</span><div className="rpm-bar"><i style={{ width: clamp((rpm - 3000) / 6000 * 100, 0, 100) + "%" }} /></div><b>{rpm.toLocaleString()}</b></div>
@@ -355,7 +376,8 @@ export default function HomePage() {
         <section className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
           <div className="settings-dialog-head"><div><p className="sim-eyebrow">RACING OPTIONS</p><h2 id="settings-title">설정</h2></div><button type="button" className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">✕</button></div>
           <div className="settings-option"><span><strong>스티어링 보정</strong><small>{steeringAssist ? "조향 입력을 부드럽게 보정합니다." : "보정 없이 입력을 즉시 적용합니다."}</small></span><button type="button" className={"steering-assist-toggle " + (steeringAssist ? "assist-enabled" : "assist-disabled")} aria-pressed={steeringAssist} onClick={toggleSteeringAssist}>{steeringAssist ? "ON" : "OFF"}</button></div>
-          <p className="settings-note">OFF에서는 조향 반응이 더 직접적이므로 고속 코너에서 주의해.</p>
+          <div className="settings-option"><span><strong>트랙 주행 보조</strong><small>{trackGuide ? "차량이 트랙 중앙 쪽으로 부드럽게 복귀합니다." : "자동으로 트랙을 따라가지 않습니다."}</small></span><button type="button" className={"steering-assist-toggle " + (trackGuide ? "assist-enabled" : "assist-disabled")} aria-pressed={trackGuide} onClick={() => { setTrackGuide(v => { trackGuideRef.current = !v; return !v; }); }}>{trackGuide ? "ON" : "OFF"}</button></div>
+          <p className="settings-note">트랙 주행 보조는 설정에서 언제든 켜고 끌 수 있어.</p>
         </section>
       </div>}
       <footer className="sim-footer"><span>RACING<span className="sim-brand-dot">.</span></span><span>SMOOTH INPUT. CLEAN LINES. FAST LAPS.</span></footer>
