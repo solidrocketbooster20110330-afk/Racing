@@ -111,24 +111,37 @@ export default function HomePage() {
       const tangent = samples[(i + 1) % (samples.length - 1)].clone().sub(samples[(i - 1 + samples.length - 1) % (samples.length - 1)]).normalize();
       return new THREE.Vector2(p.x - tangent.z * distance, p.z + tangent.x * distance);
     });
-    const addRibbon = (outerDistance: number, innerDistance: number, color: string, y: number) => {
-      const outer = offsetPoints(outerDistance);
-      const inner = offsetPoints(innerDistance).reverse();
-      const shape = new THREE.Shape();
-      outer.forEach((p, i) => i === 0 ? shape.moveTo(p.x, p.y) : shape.lineTo(p.x, p.y));
-      shape.closePath();
-      const hole = new THREE.Path();
-      inner.forEach((p, i) => i === 0 ? hole.moveTo(p.x, p.y) : hole.lineTo(p.x, p.y));
-      hole.closePath(); shape.holes.push(hole);
-      const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape, 2), material(color, 0.98));
-      mesh.rotation.x = -Math.PI / 2; mesh.position.y = y; mesh.receiveShadow = true; scene.add(mesh);
+    // Build each circuit band as explicit triangles instead of ShapeGeometry holes.
+    // ShapeGeometry's hole winding caused the runoff/asphalt to render as a huge white sheet.
+    const addRibbon = (distanceA: number, distanceB: number, color: string, y: number) => {
+      const a = offsetPoints(distanceA);
+      const b = offsetPoints(distanceB);
+      const positions: number[] = [];
+      const indices: number[] = [];
+      for (let i = 0; i < a.length; i++) {
+        positions.push(a[i].x, y, a[i].y, b[i].x, y, b[i].y);
+      }
+      for (let i = 0; i < a.length; i++) {
+        const next = (i + 1) % a.length;
+        const ai = i * 2, bi = ai + 1, an = next * 2, bn = an + 1;
+        indices.push(ai, an, bi, bi, an, bn);
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      const bandMaterial = material(color, 0.98);
+      bandMaterial.side = THREE.DoubleSide;
+      const mesh = new THREE.Mesh(geometry, bandMaterial);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
     };
     // Make the racing surface much wider and define both edges with high-contrast
     // paint, a continuous curb band, and a broad tan runoff zone outside it.
     addRibbon(42, 9, "#b7a47f", -0.05);
-    addRibbon(9, -9, "#303238", 0.006);
-    addRibbon(9.1, 8.55, "#f5f2e9", 0.025);
-    addRibbon(-8.55, -9.1, "#f5f2e9", 0.025);
+    addRibbon(-9, 9, "#303238", 0.006);
+    addRibbon(8.55, 9.1, "#f5f2e9", 0.025);
+    addRibbon(-9.1, -8.55, "#f5f2e9", 0.025);
     const addTrackLine = (distance: number, color: string, radius: number) => {
       const pts = centerCurve.getSpacedPoints(900).map((p, i, arr) => {
         const tangent = arr[(i + 1) % (arr.length - 1)].clone().sub(arr[(i - 1 + arr.length - 1) % (arr.length - 1)]).normalize();
@@ -325,7 +338,8 @@ export default function HomePage() {
       <header className="sim-topbar"><a className="sim-brand" href="#"><span className="sim-brand-mark">R</span> RACING<span className="sim-brand-dot">.</span></a><div className="sim-topbar-right"><div className="sim-mode"><span className="sim-live" /> 3D DRIVER SIM</div><button type="button" className="sim-settings-button" onClick={() => setSettingsOpen(true)} aria-label="설정 열기">⚙ 설정</button></div></header>
       <section className="sim-intro"><p className="sim-eyebrow">SINGLE-SEATER • CHASE CAMERA</p><h1>OWN THE <span>RACING LINE.</span></h1><p>Build speed on the straights. Brake early. Keep the car on the racing line.</p></section>
       <section className="sim-game" aria-label="3D driving simulator">
-        <div className="sim-view"><div className="sim-world" ref={mountRef} />
+        <div className="sim-view" onPointerDown={() => { if (!running) start(); }}><div className="sim-world" ref={mountRef} />
+          <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="서킷 배치"><path d="M15 74 L15 45 Q15 34 28 34 L101 34 Q120 34 120 48 L120 61 Q120 70 105 70 L68 70 Q55 70 55 83 L55 91 Q55 99 68 99 L123 99 Q140 99 140 83 L140 23 Q140 10 126 10 L34 10 Q15 10 15 27 Z" fill="none" stroke="#a99bbf" strokeWidth="7" strokeLinejoin="round" strokeLinecap="round"/><path d="M15 74 L15 45 Q15 34 28 34 L101 34 Q120 34 120 48 L120 61 Q120 70 105 70 L68 70 Q55 70 55 83 L55 91 Q55 99 68 99 L123 99 Q140 99 140 83 L140 23 Q140 10 126 10 L34 10 Q15 10 15 27 Z" fill="none" stroke="#28212f" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/><circle cx="15" cy="74" r="4" fill="#b99aff"/><circle cx={15 + progress * 1.1} cy={74 - Math.sin(progress / 100 * Math.PI * 2) * 28} r="4" fill="#fff" stroke="#8c5cff" strokeWidth="2"/></svg></div>
           <div className="sim-overlay sim-overlay-top"><span className={trackState.startsWith("OFF") ? "state-warning" : ""}>{trackState}</span><span>SESSION · PRACTICE</span></div>
           <div className="speed-hud"><strong>{speed}</strong><span>KM/H</span><i>GEAR <b>{gear}</b></i></div>
           <div className="rpm-hud"><span>RPM</span><div className="rpm-bar"><i style={{ width: clamp((rpm - 3000) / 6000 * 100, 0, 100) + "%" }} /></div><b>{rpm.toLocaleString()}</b></div>
