@@ -26,6 +26,8 @@ export default function HomePage() {
   const [message, setMessage] = useState("READY ON THE GRID");
   const [trackState, setTrackState] = useState("ON TRACK");
   const [progress, setProgress] = useState(0);
+  const [steeringAssist, setSteeringAssist] = useState(true);
+  const steeringAssistRef = useRef(true);
 
   const reset = useCallback(() => {
     controlsRef.current = { ...emptyControls };
@@ -45,6 +47,12 @@ export default function HomePage() {
     setRunning(false); setMessage("SESSION PAUSED");
   }, []);
   const setControl = useCallback((control: Control, pressed: boolean) => { controlsRef.current[control] = pressed; }, []);
+  const toggleSteeringAssist = useCallback(() => {
+    setSteeringAssist(current => {
+      steeringAssistRef.current = !current;
+      return !current;
+    });
+  }, []);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -224,7 +232,13 @@ export default function HomePage() {
         const speedMs = sim.speed / 3.6;
         const drag = 0.006 * sim.speed + 0.00009 * sim.speed * sim.speed;
         sim.speed = clamp(sim.speed + (throttle * (12.5 - speedMs * 0.012) - brake * 25 - drag - (throttle ? 0 : 1.2)) * dt * 3.6, 0, 335);
-        sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
+        if (steeringAssistRef.current) {
+          // Assisted steering smooths input changes to keep the car more stable.
+          sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
+        } else {
+          // Raw steering follows the key/button input immediately.
+          sim.steer = steer;
+        }
         // Speed-sensitive steering: high-speed direction changes are deliberately
         // slower, while tight corners demand braking before turn-in.
         const baseGrip = clamp(1 - Math.max(0, sim.speed - 120) / 230, 0.2, 1);
@@ -322,6 +336,7 @@ export default function HomePage() {
         <div className="sim-actions">{!running ? <button className="sim-start" onClick={start}>▶ START SESSION</button> : <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button></div>
       </section>
       <section className="sim-controls-panel"><div className="sim-controls-head"><div><p className="sim-eyebrow">DRIVER INPUT</p><h2>Controls</h2></div><span>HOLD TO INPUT</span></div>
+        <div className="steering-assist-row"><span><strong>Steering Assist</strong><small>{steeringAssist ? "입력 보정 켜짐 · 조향이 부드럽게 적용됨" : "입력 보정 꺼짐 · 조향 입력을 즉시 적용"}</small></span><button type="button" className={"sim-reset steering-assist-toggle " + (steeringAssist ? "assist-enabled" : "assist-disabled")} aria-pressed={steeringAssist} onClick={toggleSteeringAssist}>{steeringAssist ? "ON" : "OFF"}</button></div>
         <div className="sim-controls-layout"><div className="sim-steering">{button("STEER LEFT", "left")}{button("STEER RIGHT", "right")}</div><div className="sim-pedals">{button("BRAKE", "brake", "sim-brake")}{button("THROTTLE", "gas", "sim-gas")}</div></div>
         <p className="sim-hint">Keyboard: ← → steer · ↑ / W throttle · ↓ / S brake · ESC pause. Mobile: hold the on-screen controls.</p>
       </section>
