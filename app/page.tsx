@@ -225,13 +225,27 @@ export default function HomePage() {
         const drag = 0.006 * sim.speed + 0.00009 * sim.speed * sim.speed;
         sim.speed = clamp(sim.speed + (throttle * (12.5 - speedMs * 0.012) - brake * 25 - drag - (throttle ? 0 : 1.2)) * dt * 3.6, 0, 335);
         sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
-        const grip = clamp(1 - Math.max(0, sim.speed - 190) / 240, 0.28, 1);
-        sim.lateralVelocity += sim.steer * (4.4 + sim.speed / 70) * grip * dt;
-        sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.4 : 2.6));
-        sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -8, 8);
+        // Speed-sensitive steering: high-speed direction changes are deliberately
+        // slower, while tight corners demand braking before turn-in.
+        const baseGrip = clamp(1 - Math.max(0, sim.speed - 120) / 230, 0.2, 1);
+        const steeringAuthority = clamp(1.25 - sim.speed / 260, 0.28, 1.0);
+        sim.lateralVelocity += sim.steer * (5.2 + sim.speed / 95) * baseGrip * steeringAuthority * dt;
+        sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.0 : 2.2));
+        sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -15, 15);
         sim.offTrack = Math.abs(sim.lateral) > 8.8;
-        if (sim.offTrack) sim.speed = Math.max(0, sim.speed - 36 * dt);
-        sim.angle += ((sim.speed / 3.6) / Math.max(22, centerCurve.getLength() / (Math.PI * 2))) * dt * (Math.PI * 2);
+        if (sim.offTrack) {
+          sim.speed = Math.max(0, sim.speed - 58 * dt);
+          sim.lateralVelocity *= 0.92;
+        }
+        // Use realistic lap-distance scaling and slow the car through corner sectors.
+        const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
+        const curvature = centerCurve.getCurvatureAt(u);
+        const cornerSpeedLimit = clamp(220 / (1 + curvature * 38), 62, 300);
+        if (sim.speed > cornerSpeedLimit) {
+          sim.speed = Math.max(cornerSpeedLimit, sim.speed - (sim.speed - cornerSpeedLimit) * 1.8 * dt);
+        }
+        const trackLength = centerCurve.getLength();
+        sim.angle += ((sim.speed / 3.6) / trackLength) * dt * (Math.PI * 2);
         sim.lapElapsed += dt;
         if (sim.angle >= Math.PI * 2) {
           sim.angle -= Math.PI * 2; sim.lapTimes.push(sim.lapElapsed); sim.lap += 1; sim.lapElapsed = 0;
