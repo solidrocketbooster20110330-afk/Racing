@@ -2,7 +2,7 @@
   "name": "racing",
   "version": "1.0.0",
   "private": true,
-  "description": "Mobile-friendly arcade racing game prototype",
+  "description": "3D F1-inspired driving simulator",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,12 +12,14 @@
   "dependencies": {
     "next": "15.5.28",
     "react": "19.1.10",
-    "react-dom": "19.1.10"
+    "react-dom": "19.1.10",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.7",
+    "@types/three": "^0.180.0",
     "eslint": "^9.34.0",
     "eslint-config-next": "15.5.28",
     "typescript": "^5.9.2"
