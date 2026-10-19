@@ -87,8 +87,8 @@ export default function HomePage() {
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), material("#477348"));
     ground.rotation.x = -Math.PI / 2; ground.position.y = -0.12; ground.receiveShadow = true; scene.add(ground);
     // Broad paved circuit apron beneath the full layout, with the grass still visible outside it.
-    const circuitApron = new THREE.Mesh(new THREE.PlaneGeometry(1220, 920), material("#24272c", 0.98));
-    circuitApron.rotation.x = -Math.PI / 2; circuitApron.position.set(20, -0.075, -105);
+    const circuitApron = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1120), material("#202226", 1));
+    circuitApron.rotation.x = -Math.PI / 2; circuitApron.position.set(15, -0.085, -105);
     circuitApron.receiveShadow = true; scene.add(circuitApron);
 
     // Yas Marina-inspired layout: long start/finish straight, tight hairpins,
@@ -237,7 +237,7 @@ export default function HomePage() {
         // Target: 0-100 km/h in about 2 seconds, then 100-320 in roughly 6 more
         // seconds on a straight. Aerodynamic drag increases at high speed.
         const accelerationKphPerSecond = sim.speed < 100 ? 50 : 36.7;
-        const dragKphPerSecond = 0.000045 * sim.speed * sim.speed;
+        const dragKphPerSecond = 0.000035 * sim.speed * sim.speed;
         const rollingLoss = throttle ? 0 : 3.2;
         sim.speed = clamp(sim.speed + (throttle * accelerationKphPerSecond - dragKphPerSecond - brake * 150 - rollingLoss) * dt, 0, 335);
         if (steeringAssistRef.current) {
@@ -266,7 +266,7 @@ export default function HomePage() {
         const tangentBefore = centerCurve.getTangentAt((u - du + 1) % 1);
         const tangentAfter = centerCurve.getTangentAt((u + du) % 1);
         const curvature = tangentBefore.angleTo(tangentAfter) / (trackLength * du * 2);
-        const cornerSpeedLimit = clamp(220 / (1 + curvature * 38), 62, 300);
+        const cornerSpeedLimit = clamp(330 / (1 + curvature * 75), 82, 330);
         if (sim.speed > cornerSpeedLimit) {
           sim.speed = Math.max(cornerSpeedLimit, sim.speed - (sim.speed - cornerSpeedLimit) * 1.8 * dt);
         }
