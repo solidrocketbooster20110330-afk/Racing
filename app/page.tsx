@@ -148,7 +148,8 @@ export default function HomePage() {
     };
     // Make the racing surface much wider and define both edges with high-contrast
     // paint, a continuous curb band, and a broad tan runoff zone outside it.
-    addRibbon(42, 9, "#b7a47f", -0.05);
+    // Narrow dark shoulder only; a very wide offset self-intersected and created polygon spikes.
+    addRibbon(9.15, 15, "#3b3d42", -0.035);
     addRibbon(-9, 9, "#303238", 0.006);
     addRibbon(8.55, 9.1, "#f5f2e9", 0.025);
     addRibbon(-9.1, -8.55, "#f5f2e9", 0.025);
