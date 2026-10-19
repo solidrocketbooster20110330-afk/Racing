@@ -86,6 +86,10 @@ export default function HomePage() {
       new THREE.MeshStandardMaterial({ color, roughness, metalness });
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), material("#477348"));
     ground.rotation.x = -Math.PI / 2; ground.position.y = -0.12; ground.receiveShadow = true; scene.add(ground);
+    // Broad paved circuit apron beneath the full layout, with the grass still visible outside it.
+    const circuitApron = new THREE.Mesh(new THREE.PlaneGeometry(1220, 920), material("#24272c", 0.98));
+    circuitApron.rotation.x = -Math.PI / 2; circuitApron.position.set(20, -0.075, -105);
+    circuitApron.receiveShadow = true; scene.add(circuitApron);
 
     // Yas Marina-inspired layout: long start/finish straight, tight hairpins,
     // a flowing middle sector and a technical final sector (not a surveyed replica).
