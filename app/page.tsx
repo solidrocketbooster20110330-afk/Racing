@@ -303,7 +303,8 @@ export default function HomePage() {
           setRpm(Math.round(3500 + (sim.speed % 42) / 42 * 5500));
           setLapTime(fmtTime(sim.lapElapsed)); setTrackState(sim.offTrack ? "OFF TRACK · LOW GRIP" : "ON TRACK");
           setProgress(Math.round(sim.angle / (Math.PI * 2) * 100));
-          const mapIndex = Math.min(mapCoords.length - 1, Math.floor(u * mapCoords.length));
+          const mapU = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
+          const mapIndex = Math.min(mapCoords.length - 1, Math.floor(mapU * mapCoords.length));
           setMiniMapPosition(mapCoords[mapIndex]);
           sim.lastUi = now;
         }
