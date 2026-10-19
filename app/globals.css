@@ -91,3 +91,10 @@ button{font:inherit}
 @media(max-width:420px){.sim-topbar-right{gap:5px}.sim-mode{padding:7px 8px;font-size:8px}.sim-settings-button{padding:8px 9px;font-size:9px}.settings-dialog{padding:17px}}
 
 @media(min-width:760px){.sim-game{display:flex;flex-direction:column}.sim-view{height:620px;min-height:620px}.sim-controls-panel{margin:0;border-radius:0;border-left:0;border-right:0}.sim-telemetry{grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 17px;border-bottom:1px solid var(--line)}.sim-telemetry>div+div{border-left:1px solid var(--line);border-top:0;padding:0 0 0 14px}.sim-actions{padding:13px}}
+
+
+/* Compact circuit map overlay in the upper-left of the viewport */
+.mini-map{position:absolute;z-index:4;top:48px;left:12px;width:132px;padding:8px 8px 5px;border:1px solid rgba(255,255,255,.22);border-radius:11px;background:rgba(8,10,15,.78);backdrop-filter:blur(8px);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.22)}
+.mini-map-label{display:block;margin:0 0 3px;color:#cbb9ff;font-size:7px;font-weight:900;letter-spacing:.15em}
+.mini-map svg{display:block;width:100%;height:auto;overflow:visible}
+@media(max-width:420px){.mini-map{top:47px;left:9px;width:105px;padding:6px 6px 4px}.mini-map-label{font-size:6px}}
