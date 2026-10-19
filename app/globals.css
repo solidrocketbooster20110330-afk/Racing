@@ -98,3 +98,10 @@ button{font:inherit}
 .mini-map-label{display:block;margin:0 0 3px;color:#cbb9ff;font-size:7px;font-weight:900;letter-spacing:.15em}
 .mini-map svg{display:block;width:100%;height:auto;overflow:visible}
 @media(max-width:420px){.mini-map{top:47px;left:9px;width:105px;padding:6px 6px 4px}.mini-map-label{font-size:6px}}
+
+
+/* Cleaner track HUD and minimap */
+.mini-map{top:50px;left:12px;width:118px;padding:7px 8px 6px;border:1px solid rgba(201,180,255,.28);border-radius:10px;background:rgba(10,11,16,.86);box-shadow:0 5px 18px rgba(0,0,0,.24)}
+.mini-map-label{font-size:7px;letter-spacing:.16em;color:#c9b5ff}
+.mini-map svg{width:100%;height:76px}
+@media(max-width:420px){.mini-map{top:48px;left:9px;width:94px;padding:5px 6px 4px}.mini-map svg{height:53px}.mini-map-label{font-size:5px}}
