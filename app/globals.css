@@ -1,53 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root{color-scheme:dark;--bg:#08080d;--panel:#111119;--line:#282535;--muted:#9693a6;--white:#f7f5ff;--purple:#a78bfa;--violet:#7c3aed}
+:root{color-scheme:dark;--bg:#08090d;--panel:#11141b;--line:#292d39;--muted:#9ba2b2;--white:#f6f7fb;--purple:#b69aff;--violet:#7c3aed}
 *{box-sizing:border-box}
 html{min-height:100%;background:var(--bg)}
-body{margin:0;background:radial-gradient(ellipse at 80% -12%,rgba(124,58,237,.22),transparent 38%),var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{margin:0;background:radial-gradient(ellipse at 80% -12%,rgba(124,58,237,.2),transparent 38%),var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button{font:inherit}
-.shell{width:min(100% - 32px,920px);margin:0 auto;padding:env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom))}
-.topbar{height:74px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);gap:12px}
-.brand{display:flex;align-items:center;gap:10px;color:var(--white);text-decoration:none;font-weight:900;letter-spacing:.1em;font-size:18px}
-.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#b7a0ff,#7137e9);color:#100a20;font-weight:900;font-size:20px;font-family:"Barlow Condensed",sans-serif;letter-spacing:0}
-.brand-dot{color:var(--purple)}
-.top-pill,.touch-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #342846;background:rgba(124,58,237,.1);border-radius:999px;padding:8px 11px;color:#d8ceff;font-size:10px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
-.live-dot{width:7px;height:7px;background:#b9a1ff;box-shadow:0 0 10px #a78bfa;border-radius:100%}
-.intro{padding:40px 0 22px}
-.eyebrow{margin:0 0 10px;color:var(--purple);font-size:10px;font-weight:800;letter-spacing:.22em}
-h1,h2,p{margin-top:0}
-h1{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(46px,9vw,80px);line-height:.88;letter-spacing:-.025em;margin:0;text-transform:uppercase;font-weight:900}
-h1 span{color:var(--purple)}
-.subtitle{margin:17px 0 0;color:#aaa6ba;font-size:14px;line-height:1.6}
-.game-card,.controls-panel{border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 45%),var(--panel);border-radius:20px;overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.2)}
-.canvas-wrap{height:clamp(390px,65vh,590px);min-height:390px;background:#15132a;position:relative}
-canvas{width:100%;height:100%;display:block;touch-action:none}
-.telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:17px 14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);gap:10px}
-.telemetry-item{display:flex;flex-direction:column;gap:7px;min-width:0}
-.telemetry-item+ .telemetry-item{border-left:1px solid var(--line);padding-left:14px}
-.telemetry-item>span{font-size:9px;font-weight:800;letter-spacing:.13em;color:var(--muted)}
-.telemetry-item strong{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(16px,3.5vw,25px);font-weight:700;white-space:nowrap}
-.telemetry-item small{font-family:Inter,sans-serif;font-size:10px;color:var(--muted);font-weight:600}
-.game-actions{display:flex;gap:10px;padding:14px}
-.start-button,.reset-button{height:48px;border-radius:12px;border:1px solid transparent;font-size:12px;font-weight:900;letter-spacing:.07em;cursor:pointer;touch-action:manipulation}
-.start-button{flex:1;color:#100a1f;background:linear-gradient(135deg,#c3afff,#8d65f2);box-shadow:0 5px 24px rgba(124,58,237,.2)}
-.start-button:active,.control:active{transform:scale(.98)}
-.pause-button{background:#262034;color:#ede8ff;border-color:#403451;box-shadow:none}
-.reset-button{width:106px;color:#e5defb;background:#191622;border-color:#393044}
-.lap-row{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.1em;gap:12px}
-.lap-row b{margin-left:5px;color:#ede8ff;font-size:11px;letter-spacing:0}
-.controls-panel{margin-top:18px;padding:20px}
-.controls-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.controls-heading h2{font-family:"Barlow Condensed",Impact,sans-serif;font-size:32px;margin:0;font-weight:800;letter-spacing:.01em}
-.touch-badge{font-size:9px;padding:7px 9px}
-.controls-layout{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:22px}
-.steering,.pedals{display:flex;align-items:center;gap:10px}
-.control{height:76px;min-width:76px;padding:8px 11px;border:1px solid #403451;border-radius:16px;background:linear-gradient(145deg,#282238,#17141f);color:#f1ecff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:22px;font-weight:900;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-.control span{font-size:9px;letter-spacing:.1em;font-weight:900}
-.brake-control{background:linear-gradient(145deg,#3b202b,#1f151b);border-color:#5b303d;color:#ffb5c3}
-.gas-control{background:linear-gradient(145deg,#5535a0,#2b1a51);border-color:#7855c3;color:#e8deff}
-.hint{color:var(--muted);font-size:11px;line-height:1.65;margin:18px 0 0}
-.footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:24px 3px 0;color:#827d92;font-size:9px;font-weight:800;letter-spacing:.11em}
-.footer>span:first-child{color:#dcd5ef;font-size:11px}
-@media(min-width:700px){.intro{padding-top:54px}.game-card{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,.8fr);align-items:stretch}.canvas-wrap{grid-row:span 4;height:540px;min-height:0}.telemetry{align-content:end;grid-template-columns:1fr;padding:22px;border-top:0}.telemetry-item+.telemetry-item{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.telemetry-item strong{font-size:29px}.game-actions{align-self:end;padding:0 22px 16px}.lap-row{padding:0 22px 22px}.controls-layout{justify-content:flex-start;gap:48px}.control{min-width:92px;height:84px}}
-@media(max-width:420px){.shell{width:calc(100% - 20px)}.topbar{height:62px}.intro{padding-top:31px}.canvas-wrap{height:440px;min-height:440px}.controls-panel{padding:15px}.controls-layout{gap:8px}.steering,.pedals{gap:7px}.control{min-width:0;width:68px;height:72px;padding:7px 4px;border-radius:13px}.control span{font-size:8px}.telemetry{padding:14px 9px}.telemetry-item+.telemetry-item{padding-left:9px}.telemetry-item>span{font-size:8px}.lap-row{font-size:8px}.reset-button{width:86px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.sim-shell{width:min(100% - 28px,1060px);margin:0 auto;padding:env(safe-area-inset-top) 0 calc(26px + env(safe-area-inset-bottom))}
+.sim-topbar{height:70px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);gap:12px}
+.sim-brand{display:flex;align-items:center;gap:9px;color:var(--white);text-decoration:none;font-weight:900;letter-spacing:.1em;font-size:17px}
+.sim-brand-mark{display:grid;place-items:center;width:33px;height:33px;border-radius:9px;background:linear-gradient(145deg,#d4c1ff,#7137e9);color:#100a20;font-weight:900;font-size:20px;font-family:"Barlow Condensed",sans-serif}
+.sim-brand-dot{color:var(--purple)}
+.sim-mode{display:inline-flex;align-items:center;gap:8px;border:1px solid #343146;background:rgba(124,58,237,.12);border-radius:999px;padding:8px 11px;color:#ded4ff;font-size:9px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.sim-live{width:7px;height:7px;background:#b9a1ff;box-shadow:0 0 10px #a78bfa;border-radius:100%}
+.sim-intro{padding:32px 0 20px}
+.sim-eyebrow{margin:0 0 9px;color:var(--purple);font-size:10px;font-weight:800;letter-spacing:.2em}
+.sim-intro h1{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(38px,7vw,65px);line-height:.95;letter-spacing:-.02em;margin:0;font-weight:900}
+.sim-intro h1 span{color:var(--purple)}
+.sim-intro>p:last-child{margin:12px 0 0;color:#aeb3c0;font-size:13px;line-height:1.6}
+.sim-game,.sim-controls-panel{border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 45%),var(--panel);border-radius:18px;overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.22)}
+.sim-view{height:clamp(430px,68vh,660px);min-height:430px;position:relative;background:#9ab6ca;overflow:hidden}
+.sim-world{position:absolute;inset:0}
+.sim-world canvas{width:100%;height:100%;display:block;touch-action:none}
+.sim-overlay{position:absolute;z-index:2;display:flex;justify-content:space-between;gap:10px;pointer-events:none;text-shadow:0 2px 8px #000}
+.sim-overlay-top{left:14px;right:14px;top:14px;font-size:9px;font-weight:900;letter-spacing:.12em}
+.sim-overlay-top span{padding:8px 10px;border-radius:7px;background:rgba(8,10,15,.72);backdrop-filter:blur(8px)}
+.sim-overlay-top .state-warning{color:#ffb3a8}
+.speed-hud{position:absolute;left:14px;bottom:16px;display:flex;align-items:baseline;gap:7px;background:rgba(8,10,15,.78);border:1px solid rgba(255,255,255,.12);padding:9px 12px;border-radius:10px;backdrop-filter:blur(8px);text-shadow:0 2px 8px #000}
+.speed-hud strong{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(38px,7vw,54px);line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+.speed-hud>span{font-size:9px;font-weight:900;color:#c8b5ff}
+.speed-hud i{font-style:normal;margin-left:6px;border-left:1px solid #62616d;padding-left:10px;font-size:8px;color:#b9bdc8;font-weight:800}
+.speed-hud i b{font-size:17px;color:#fff;margin-left:4px}
+.rpm-hud{position:absolute;left:14px;right:14px;bottom:91px;display:flex;align-items:center;gap:9px;color:#fff;text-shadow:0 2px 6px #000;font-size:9px;font-weight:900}
+.rpm-hud .rpm-bar{height:5px;flex:1;border-radius:8px;background:rgba(0,0,0,.5);overflow:hidden}
+.rpm-bar i{display:block;height:100%;background:linear-gradient(90deg,#8d75ff,#f6c45e,#f45c65);transition:width .1s linear}
+.rpm-hud>b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.lap-hud{position:absolute;right:14px;bottom:16px;min-width:83px;padding:10px 12px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(8,10,15,.78);backdrop-filter:blur(8px);display:grid;grid-template-columns:auto auto;column-gap:10px;align-items:center;text-shadow:0 2px 8px #000}
+.lap-hud>span{font-size:8px;letter-spacing:.12em;color:#c9b7ff;font-weight:900}
+.lap-hud>b{font-family:"Barlow Condensed",Impact,sans-serif;font-size:28px;line-height:1}
+.lap-hud>small{grid-column:1/3;text-align:right;color:#c5c7d0;font-size:9px;margin-top:4px}
+.lap-progress{grid-column:1/3;height:3px;background:#41404a;margin-top:5px;border-radius:5px;overflow:hidden}
+.lap-progress i{display:block;height:100%;background:#bba0ff}
+.sim-ready{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:min(82%,330px);text-align:center;display:flex;flex-direction:column;gap:9px;padding:18px 15px;border-radius:13px;background:rgba(8,10,15,.7);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(9px);text-shadow:0 2px 6px #000;pointer-events:none}
+.sim-ready span{color:#c7b2ff;font-size:9px;font-weight:900;letter-spacing:.18em}
+.sim-ready b{font-size:17px;letter-spacing:.03em}
+.sim-ready small{color:#d2d3da;font-size:10px}
+.sim-telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 17px;border-bottom:1px solid var(--line);gap:10px}
+.sim-telemetry>div{display:flex;flex-direction:column;gap:7px;min-width:0}
+.sim-telemetry>div+div{border-left:1px solid var(--line);padding-left:14px}
+.sim-telemetry span{font-size:8px;font-weight:900;letter-spacing:.11em;color:var(--muted)}
+.sim-telemetry strong{font-family:"Barlow Condensed",Impact,sans-serif;font-size:clamp(16px,3.2vw,24px);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sim-actions{display:flex;gap:10px;padding:13px}
+.sim-start,.sim-reset{height:47px;border-radius:11px;border:1px solid transparent;font-size:11px;font-weight:900;letter-spacing:.07em;cursor:pointer;touch-action:manipulation}
+.sim-start{flex:1;color:#100a1f;background:linear-gradient(135deg,#d4c3ff,#9870f5);box-shadow:0 5px 24px rgba(124,58,237,.2)}
+.sim-start:active,.sim-control:active{transform:scale(.98)}
+.sim-pause{background:#282333;color:#ede8ff;border-color:#403451;box-shadow:none}
+.sim-reset{width:100px;color:#e5defb;background:#191923;border-color:#393d4b}
+.sim-controls-panel{margin-top:16px;padding:19px}
+.sim-controls-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.sim-controls-head h2{font-family:"Barlow Condensed",Impact,sans-serif;font-size:29px;margin:0;font-weight:800}
+.sim-controls-head>span{font-size:8px;letter-spacing:.12em;font-weight:900;color:#c8b7ff;border:1px solid #3d3454;border-radius:999px;padding:7px 9px}
+.sim-controls-layout{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:19px}
+.sim-steering,.sim-pedals{display:flex;align-items:center;gap:9px}
+.sim-control{height:73px;min-width:73px;padding:8px 10px;border:1px solid #414252;border-radius:15px;background:linear-gradient(145deg,#2a2b38,#171820);color:#f1ecff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:22px;font-weight:900;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.sim-control span{font-size:8px;letter-spacing:.08em;font-weight:900}
+.sim-brake{background:linear-gradient(145deg,#43232d,#20151b);border-color:#653440;color:#ffb5c3}
+.sim-gas{background:linear-gradient(145deg,#5535a0,#2b1a51);border-color:#7855c3;color:#e8deff}
+.sim-hint{color:var(--muted);font-size:10px;line-height:1.7;margin:15px 0 0}
+.sim-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:22px 3px 0;color:#827d92;font-size:8px;font-weight:800;letter-spacing:.1em}
+.sim-footer>span:first-child{color:#dcd5ef;font-size:11px}
+@media(min-width:760px){.sim-intro{padding-top:42px}.sim-game{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(250px,.75fr);align-items:stretch}.sim-view{grid-row:span 3;height:620px;min-height:0}.sim-telemetry{align-content:end;grid-template-columns:1fr;padding:22px;border-bottom:0}.sim-telemetry>div+div{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.sim-telemetry strong{font-size:28px}.sim-actions{align-self:end;padding:0 22px 16px}.sim-controls-layout{justify-content:flex-start;gap:44px}.sim-control{min-width:90px;height:82px}}
+@media(max-width:420px){.sim-shell{width:calc(100% - 16px)}.sim-topbar{height:61px}.sim-intro{padding-top:27px}.sim-view{height:480px;min-height:480px}.sim-telemetry{padding:12px 8px;gap:5px}.sim-telemetry>div+div{padding-left:8px}.sim-telemetry span{font-size:7px;letter-spacing:.07em}.sim-telemetry strong{font-size:15px}.sim-controls-panel{padding:14px}.sim-controls-layout{gap:7px}.sim-steering,.sim-pedals{gap:6px}.sim-control{width:65px;min-width:0;height:70px;padding:6px 3px;border-radius:12px}.sim-control span{font-size:7px}.sim-reset{width:83px}.sim-ready{top:39%}}
