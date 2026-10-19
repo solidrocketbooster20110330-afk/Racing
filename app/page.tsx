@@ -27,6 +27,7 @@ export default function HomePage() {
   const [trackState, setTrackState] = useState("ON TRACK");
   const [progress, setProgress] = useState(0);
   const [steeringAssist, setSteeringAssist] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const steeringAssistRef = useRef(true);
 
   const reset = useCallback(() => {
@@ -75,30 +76,30 @@ export default function HomePage() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#a9c0d0");
-    scene.fog = new THREE.Fog("#a9c0d0", 260, 720);
-    const camera = new THREE.PerspectiveCamera(66, mount.clientWidth / mount.clientHeight, 0.1, 1200);
+    scene.fog = new THREE.Fog("#a9c0d0", 600, 1700);
+    const camera = new THREE.PerspectiveCamera(66, mount.clientWidth / mount.clientHeight, 0.1, 2600);
     scene.add(new THREE.HemisphereLight("#eaf4ff", "#48533e", 2.2));
     const sun = new THREE.DirectionalLight("#fff0d7", 3);
     sun.position.set(-45, 70, -25); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); scene.add(sun);
 
     const material = (color: string, roughness = 0.8, metalness = 0) =>
       new THREE.MeshStandardMaterial({ color, roughness, metalness });
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), material("#477348"));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), material("#477348"));
     ground.rotation.x = -Math.PI / 2; ground.position.y = -0.12; ground.receiveShadow = true; scene.add(ground);
 
     // Yas Marina-inspired layout: long start/finish straight, tight hairpins,
     // a flowing middle sector and a technical final sector (not a surveyed replica).
     const trackPoints = [
-      new THREE.Vector3(-150, 0, 92), new THREE.Vector3(112, 0, 92),
-      new THREE.Vector3(148, 0, 76), new THREE.Vector3(158, 0, 42),
-      new THREE.Vector3(143, 0, 10), new THREE.Vector3(65, 0, 10),
-      new THREE.Vector3(38, 0, -8), new THREE.Vector3(47, 0, -38),
-      new THREE.Vector3(105, 0, -72), new THREE.Vector3(126, 0, -108),
-      new THREE.Vector3(108, 0, -145), new THREE.Vector3(54, 0, -164),
-      new THREE.Vector3(5, 0, -154), new THREE.Vector3(-20, 0, -124),
-      new THREE.Vector3(-15, 0, -82), new THREE.Vector3(-48, 0, -48),
-      new THREE.Vector3(-112, 0, -35), new THREE.Vector3(-151, 0, -8),
-      new THREE.Vector3(-147, 0, 48), new THREE.Vector3(-150, 0, 92)
+      new THREE.Vector3(-470, 0, 276), new THREE.Vector3(390, 0, 276),
+      new THREE.Vector3(485, 0, 228), new THREE.Vector3(520, 0, 126),
+      new THREE.Vector3(468, 0, 30), new THREE.Vector3(220, 0, 30),
+      new THREE.Vector3(120, 0, -24), new THREE.Vector3(145, 0, -114),
+      new THREE.Vector3(330, 0, -216), new THREE.Vector3(390, 0, -324),
+      new THREE.Vector3(330, 0, -435), new THREE.Vector3(165, 0, -492),
+      new THREE.Vector3(15, 0, -462), new THREE.Vector3(-60, 0, -372),
+      new THREE.Vector3(-45, 0, -246), new THREE.Vector3(-144, 0, -144),
+      new THREE.Vector3(-336, 0, -105), new THREE.Vector3(-453, 0, -24),
+      new THREE.Vector3(-441, 0, 144), new THREE.Vector3(-470, 0, 276)
     ];
     const centerCurve = new THREE.CatmullRomCurve3(trackPoints, true, "centripetal");
     const samples = centerCurve.getSpacedPoints(900);
@@ -120,7 +121,7 @@ export default function HomePage() {
     };
     // Make the racing surface much wider and define both edges with high-contrast
     // paint, a continuous curb band, and a broad tan runoff zone outside it.
-    addRibbon(25, 9, "#b7a47f", -0.05);
+    addRibbon(42, 9, "#b7a47f", -0.05);
     addRibbon(9, -9, "#303238", 0.006);
     addRibbon(9.1, 8.55, "#f5f2e9", 0.025);
     addRibbon(-8.55, -9.1, "#f5f2e9", 0.025);
@@ -153,13 +154,13 @@ export default function HomePage() {
         }
       }
     }
-    const startLine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 17.2), material("#ffffff", 0.65));
-    startLine.position.set(-85, 0.045, 92); scene.add(startLine);
+    const startLine = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 17.2), material("#ffffff", 0.65));
+    startLine.position.set(-240, 0.045, 276); scene.add(startLine);
     const standMat = material("#2b303a");
     for (let i = 0; i < 28; i++) {
       const a = i / 28 * Math.PI * 2;
       const stand = new THREE.Mesh(new THREE.BoxGeometry(24, 5, 9), standMat);
-      stand.position.set(Math.sin(a) * 220, 2.2, Math.cos(a) * 240);
+      stand.position.set(Math.sin(a) * 720, 2.2, Math.cos(a) * 760);
       stand.lookAt(0, 1, 0); stand.castShadow = true; scene.add(stand);
     }
 
@@ -202,9 +203,9 @@ export default function HomePage() {
       car.position.set(center.x + normal.x * sim.lateral, 0, center.z + normal.z * sim.lateral);
       car.rotation.y = Math.atan2(tangent.x, tangent.z) + sim.steer * 0.08;
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
-      const behind = new THREE.Vector3(0, 10, -24).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y).add(car.position);
+      const behind = new THREE.Vector3(0, 18, -44).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y).add(car.position);
       camera.position.lerp(behind, 0.14);
-      const target = car.position.clone().add(new THREE.Vector3(0, 2.2, 12).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y));
+      const target = car.position.clone().add(new THREE.Vector3(0, 4, 22).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y));
       camera.lookAt(target);
     };
     updateCarAndCamera();
@@ -229,9 +230,12 @@ export default function HomePage() {
         const throttle = c.gas ? 1 : 0;
         const brake = c.brake ? 1 : 0;
         const steer = (c.right ? 1 : 0) - (c.left ? 1 : 0);
-        const speedMs = sim.speed / 3.6;
-        const drag = 0.006 * sim.speed + 0.00009 * sim.speed * sim.speed;
-        sim.speed = clamp(sim.speed + (throttle * (12.5 - speedMs * 0.012) - brake * 25 - drag - (throttle ? 0 : 1.2)) * dt * 3.6, 0, 335);
+        // Target: 0-100 km/h in about 2 seconds, then 100-320 in roughly 6 more
+        // seconds on a straight. Aerodynamic drag increases at high speed.
+        const accelerationKphPerSecond = sim.speed < 100 ? 50 : 36.7;
+        const dragKphPerSecond = 0.000045 * sim.speed * sim.speed;
+        const rollingLoss = throttle ? 0 : 3.2;
+        sim.speed = clamp(sim.speed + (throttle * accelerationKphPerSecond - dragKphPerSecond - brake * 150 - rollingLoss) * dt, 0, 335);
         if (steeringAssistRef.current) {
           // Assisted steering smooths input changes to keep the car more stable.
           sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
@@ -322,7 +326,7 @@ export default function HomePage() {
 
   return (
     <main className="sim-shell">
-      <header className="sim-topbar"><a className="sim-brand" href="#"><span className="sim-brand-mark">R</span> RACING<span className="sim-brand-dot">.</span></a><div className="sim-mode"><span className="sim-live" /> 3D DRIVER SIM</div></header>
+      <header className="sim-topbar"><a className="sim-brand" href="#"><span className="sim-brand-mark">R</span> RACING<span className="sim-brand-dot">.</span></a><div className="sim-topbar-right"><div className="sim-mode"><span className="sim-live" /> 3D DRIVER SIM</div><button type="button" className="sim-settings-button" onClick={() => setSettingsOpen(true)} aria-label="설정 열기">⚙ 설정</button></div></header>
       <section className="sim-intro"><p className="sim-eyebrow">SINGLE-SEATER • CHASE CAMERA</p><h1>OWN THE <span>RACING LINE.</span></h1><p>Build speed on the straights. Brake early. Keep the car on the racing line.</p></section>
       <section className="sim-game" aria-label="3D driving simulator">
         <div className="sim-view"><div className="sim-world" ref={mountRef} />
@@ -336,10 +340,16 @@ export default function HomePage() {
         <div className="sim-actions">{!running ? <button className="sim-start" onClick={start}>▶ START SESSION</button> : <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button></div>
       </section>
       <section className="sim-controls-panel"><div className="sim-controls-head"><div><p className="sim-eyebrow">DRIVER INPUT</p><h2>Controls</h2></div><span>HOLD TO INPUT</span></div>
-        <div className="steering-assist-row"><span><strong>Steering Assist</strong><small>{steeringAssist ? "입력 보정 켜짐 · 조향이 부드럽게 적용됨" : "입력 보정 꺼짐 · 조향 입력을 즉시 적용"}</small></span><button type="button" className={"sim-reset steering-assist-toggle " + (steeringAssist ? "assist-enabled" : "assist-disabled")} aria-pressed={steeringAssist} onClick={toggleSteeringAssist}>{steeringAssist ? "ON" : "OFF"}</button></div>
-        <div className="sim-controls-layout"><div className="sim-steering">{button("STEER LEFT", "left")}{button("STEER RIGHT", "right")}</div><div className="sim-pedals">{button("BRAKE", "brake", "sim-brake")}{button("THROTTLE", "gas", "sim-gas")}</div></div>
+         <div className="sim-controls-layout"><div className="sim-steering">{button("STEER LEFT", "left")}{button("STEER RIGHT", "right")}</div><div className="sim-pedals">{button("BRAKE", "brake", "sim-brake")}{button("THROTTLE", "gas", "sim-gas")}</div></div>
         <p className="sim-hint">Keyboard: ← → steer · ↑ / W throttle · ↓ / S brake · ESC pause. Mobile: hold the on-screen controls.</p>
       </section>
+      {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}>
+        <section className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
+          <div className="settings-dialog-head"><div><p className="sim-eyebrow">RACING OPTIONS</p><h2 id="settings-title">설정</h2></div><button type="button" className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">✕</button></div>
+          <div className="settings-option"><span><strong>스티어링 보정</strong><small>{steeringAssist ? "조향 입력을 부드럽게 보정합니다." : "보정 없이 입력을 즉시 적용합니다."}</small></span><button type="button" className={"steering-assist-toggle " + (steeringAssist ? "assist-enabled" : "assist-disabled")} aria-pressed={steeringAssist} onClick={toggleSteeringAssist}>{steeringAssist ? "ON" : "OFF"}</button></div>
+          <p className="settings-note">OFF에서는 조향 반응이 더 직접적이므로 고속 코너에서 주의해.</p>
+        </section>
+      </div>}
       <footer className="sim-footer"><span>RACING<span className="sim-brand-dot">.</span></span><span>SMOOTH INPUT. CLEAN LINES. FAST LAPS.</span></footer>
     </main>
   );
