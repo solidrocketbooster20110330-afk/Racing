@@ -105,3 +105,6 @@ button{font:inherit}
 .mini-map-label{font-size:7px;letter-spacing:.16em;color:#c9b5ff}
 .mini-map svg{width:100%;height:76px}
 @media(max-width:420px){.mini-map{top:48px;left:9px;width:94px;padding:5px 6px 4px}.mini-map svg{height:53px}.mini-map-label{font-size:5px}}
+
+.settings-option + .settings-option{margin-top:4px}
+.mini-map svg{overflow:visible}
