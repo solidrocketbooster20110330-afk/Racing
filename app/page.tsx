@@ -340,13 +340,14 @@ export default function HomePage() {
           <div className="lap-hud"><span>LAP</span><b>{String(lap).padStart(2, "0")}</b><small>{progress}%</small><div className="lap-progress"><i style={{ width: progress + "%" }} /></div></div>
           {!running && <div className="sim-ready"><span>RACING SIMULATOR</span><b>{message}</b><small>Use the controls to accelerate and steer</small></div>}
         </div>
-        <div className="sim-telemetry"><div><span>SESSION TIME</span><strong>{lapTime}</strong></div><div><span>LAST LAP</span><strong>{lastLap}</strong></div><div><span>PERSONAL BEST</span><strong>{bestLap}</strong></div></div>
-        <div className="sim-actions">{!running ? <button className="sim-start" onClick={start}>▶ START SESSION</button> : <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button></div>
-      </section>
       <section className="sim-controls-panel"><div className="sim-controls-head"><div><p className="sim-eyebrow">DRIVER INPUT</p><h2>Controls</h2></div><span>HOLD TO INPUT</span></div>
          <div className="sim-controls-layout"><div className="sim-steering">{button("STEER LEFT", "left")}{button("STEER RIGHT", "right")}</div><div className="sim-pedals">{button("BRAKE", "brake", "sim-brake")}{button("THROTTLE", "gas", "sim-gas")}</div></div>
         <p className="sim-hint">Keyboard: ← → steer · ↑ / W throttle · ↓ / S brake · ESC pause. Mobile: hold the on-screen controls.</p>
       </section>
+        <div className="sim-telemetry"><div><span>SESSION TIME</span><strong>{lapTime}</strong></div><div><span>LAST LAP</span><strong>{lastLap}</strong></div><div><span>PERSONAL BEST</span><strong>{bestLap}</strong></div></div>
+        <div className="sim-actions">{!running ? <button className="sim-start" onClick={start}>▶ START SESSION</button> : <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button></div>
+      </section>
+
       {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}>
         <section className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
           <div className="settings-dialog-head"><div><p className="sim-eyebrow">RACING OPTIONS</p><h2 id="settings-title">설정</h2></div><button type="button" className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">✕</button></div>
