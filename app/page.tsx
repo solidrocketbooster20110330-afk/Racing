@@ -239,12 +239,15 @@ export default function HomePage() {
         }
         // Use realistic lap-distance scaling and slow the car through corner sectors.
         const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
-        const curvature = centerCurve.getCurvatureAt(u);
+        const trackLength = centerCurve.getLength();
+        const du = 0.002;
+        const tangentBefore = centerCurve.getTangentAt((u - du + 1) % 1);
+        const tangentAfter = centerCurve.getTangentAt((u + du) % 1);
+        const curvature = tangentBefore.angleTo(tangentAfter) / (trackLength * du * 2);
         const cornerSpeedLimit = clamp(220 / (1 + curvature * 38), 62, 300);
         if (sim.speed > cornerSpeedLimit) {
           sim.speed = Math.max(cornerSpeedLimit, sim.speed - (sim.speed - cornerSpeedLimit) * 1.8 * dt);
         }
-        const trackLength = centerCurve.getLength();
         sim.angle += ((sim.speed / 3.6) / trackLength) * dt * (Math.PI * 2);
         sim.lapElapsed += dt;
         if (sim.angle >= Math.PI * 2) {
