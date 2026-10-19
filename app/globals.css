@@ -89,3 +89,5 @@ button{font:inherit}
 .steering-assist-toggle.assist-disabled{background:#27242e;color:#e7e2f2;border-color:#51485f}
 .settings-note{margin:14px 0 0;color:#a6a2b1;font-size:10px;line-height:1.6}
 @media(max-width:420px){.sim-topbar-right{gap:5px}.sim-mode{padding:7px 8px;font-size:8px}.sim-settings-button{padding:8px 9px;font-size:9px}.settings-dialog{padding:17px}}
+
+@media(min-width:760px){.sim-game{display:flex;flex-direction:column}.sim-view{height:620px;min-height:620px}.sim-controls-panel{margin:0;border-radius:0;border-left:0;border-right:0}.sim-telemetry{grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 17px;border-bottom:1px solid var(--line)}.sim-telemetry>div+div{border-left:1px solid var(--line);border-top:0;padding:0 0 0 14px}.sim-actions{padding:13px}}
