@@ -86,10 +86,7 @@ export default function HomePage() {
       new THREE.MeshStandardMaterial({ color, roughness, metalness });
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), material("#477348"));
     ground.rotation.x = -Math.PI / 2; ground.position.y = -0.12; ground.receiveShadow = true; scene.add(ground);
-    // Broad paved circuit apron beneath the full layout, with the grass still visible outside it.
-    const circuitApron = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1120), material("#202226", 1));
-    circuitApron.rotation.x = -Math.PI / 2; circuitApron.position.set(15, -0.085, -105);
-    circuitApron.receiveShadow = true; scene.add(circuitApron);
+    // No rectangular asphalt apron: keep the surrounding terrain grassy and the circuit shape clean.
 
     // Yas Marina-inspired layout: long start/finish straight, tight hairpins,
     // a flowing middle sector and a technical final sector (not a surveyed replica).
@@ -339,7 +336,7 @@ export default function HomePage() {
       <section className="sim-intro"><p className="sim-eyebrow">SINGLE-SEATER • CHASE CAMERA</p><h1>OWN THE <span>RACING LINE.</span></h1><p>Build speed on the straights. Brake early. Keep the car on the racing line.</p></section>
       <section className="sim-game" aria-label="3D driving simulator">
         <div className="sim-view" onPointerDown={() => { if (!running) start(); }}><div className="sim-world" ref={mountRef} />
-          <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="서킷 배치"><path d="M15 74 L15 45 Q15 34 28 34 L101 34 Q120 34 120 48 L120 61 Q120 70 105 70 L68 70 Q55 70 55 83 L55 91 Q55 99 68 99 L123 99 Q140 99 140 83 L140 23 Q140 10 126 10 L34 10 Q15 10 15 27 Z" fill="none" stroke="#a99bbf" strokeWidth="7" strokeLinejoin="round" strokeLinecap="round"/><path d="M15 74 L15 45 Q15 34 28 34 L101 34 Q120 34 120 48 L120 61 Q120 70 105 70 L68 70 Q55 70 55 83 L55 91 Q55 99 68 99 L123 99 Q140 99 140 83 L140 23 Q140 10 126 10 L34 10 Q15 10 15 27 Z" fill="none" stroke="#28212f" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/><circle cx="15" cy="74" r="4" fill="#b99aff"/><circle cx={15 + progress * 1.1} cy={74 - Math.sin(progress / 100 * Math.PI * 2) * 28} r="4" fill="#fff" stroke="#8c5cff" strokeWidth="2"/></svg></div>
+          <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="실제 서킷 배치"><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#b8a2ef" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round"/><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#34313f" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round"/><path d="M12 72 L124 72 Q143 72 143 55 L143 34 Q143 18 126 18 L85 18 Q70 18 70 33 L70 43 L38 43 Q21 43 21 57 L21 82 Q21 96 37 96 L84 96 Q101 96 101 82 L101 72" fill="none" stroke="#e9e3f7" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity=".8"/><circle cx="12" cy="72" r="4" fill="#b99aff"/><text x="19" y="68" fill="#fff" fontSize="6" fontWeight="700">START</text></svg></div>
           <div className="sim-overlay sim-overlay-top"><span className={trackState.startsWith("OFF") ? "state-warning" : ""}>{trackState}</span><span>SESSION · PRACTICE</span></div>
           <div className="speed-hud"><strong>{speed}</strong><span>KM/H</span><i>GEAR <b>{gear}</b></i></div>
           <div className="rpm-hud"><span>RPM</span><div className="rpm-bar"><i style={{ width: clamp((rpm - 3000) / 6000 * 100, 0, 100) + "%" }} /></div><b>{rpm.toLocaleString()}</b></div>
