@@ -26,9 +26,9 @@ export default function HomePage() {
   const [message, setMessage] = useState("READY ON THE GRID");
   const [trackState, setTrackState] = useState("ON TRACK");
   const [progress, setProgress] = useState(0);
-  const [steeringAssist, setSteeringAssist] = useState(true);
+  const [steeringAssist, setSteeringAssist] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const steeringAssistRef = useRef(true);
+  const steeringAssistRef = useRef(false);
 
   const reset = useCallback(() => {
     controlsRef.current = { ...emptyControls };
@@ -239,7 +239,8 @@ export default function HomePage() {
         const accelerationKphPerSecond = sim.speed < 100 ? 50 : 36.7;
         const dragKphPerSecond = 0.000035 * sim.speed * sim.speed;
         const rollingLoss = throttle ? 0 : 3.2;
-        sim.speed = clamp(sim.speed + (throttle * accelerationKphPerSecond - dragKphPerSecond - brake * 150 - rollingLoss) * dt, 0, 335);
+        // Disable automatic speed assists; braking and drag remain driver/physics inputs.
+        sim.speed = clamp(sim.speed + (throttle * accelerationKphPerSecond - dragKphPerSecond - brake * 150 - rollingLoss) * dt, 0, 320);
         if (steeringAssistRef.current) {
           // Assisted steering smooths input changes to keep the car more stable.
           sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
@@ -249,8 +250,8 @@ export default function HomePage() {
         }
         // Speed-sensitive steering: high-speed direction changes are deliberately
         // slower, while tight corners demand braking before turn-in.
-        const baseGrip = clamp(1 - Math.max(0, sim.speed - 120) / 230, 0.2, 1);
-        const steeringAuthority = clamp(1.25 - sim.speed / 260, 0.28, 1.0);
+        const baseGrip = 1;
+        const steeringAuthority = 1;
         sim.lateralVelocity += sim.steer * (5.2 + sim.speed / 95) * baseGrip * steeringAuthority * dt;
         sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.0 : 2.2));
         sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -15, 15);
@@ -259,17 +260,8 @@ export default function HomePage() {
           sim.speed = Math.max(0, sim.speed - 58 * dt);
           sim.lateralVelocity *= 0.92;
         }
-        // Use realistic lap-distance scaling and slow the car through corner sectors.
-        const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
+        // No automatic corner speed limiter: braking into corners is entirely manual.
         const trackLength = centerCurve.getLength();
-        const du = 0.002;
-        const tangentBefore = centerCurve.getTangentAt((u - du + 1) % 1);
-        const tangentAfter = centerCurve.getTangentAt((u + du) % 1);
-        const curvature = tangentBefore.angleTo(tangentAfter) / (trackLength * du * 2);
-        const cornerSpeedLimit = clamp(330 / (1 + curvature * 75), 82, 330);
-        if (sim.speed > cornerSpeedLimit) {
-          sim.speed = Math.max(cornerSpeedLimit, sim.speed - (sim.speed - cornerSpeedLimit) * 1.8 * dt);
-        }
         sim.angle += ((sim.speed / 3.6) / trackLength) * dt * (Math.PI * 2);
         sim.lapElapsed += dt;
         if (sim.angle >= Math.PI * 2) {
