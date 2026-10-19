@@ -78,41 +78,72 @@ export default function HomePage() {
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), material("#477348"));
     ground.rotation.x = -Math.PI / 2; ground.position.y = -0.12; ground.receiveShadow = true; scene.add(ground);
 
-    const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 18, 28, 0, Math.PI * 2, false, 0);
-    const hole = new THREE.Path();
-    hole.absellipse(0, 0, 8, 18, 0, Math.PI * 2, true, 0);
-    shape.holes.push(hole);
-    const road = new THREE.Mesh(new THREE.ShapeGeometry(shape, 96), material("#303238", 0.95));
-    road.rotation.x = -Math.PI / 2; road.position.y = 0.006; road.receiveShadow = true; scene.add(road);
-
-    const makeCurve = (rx: number, rz: number, y = 0.055) => {
-      const points: THREE.Vector3[] = [];
-      for (let i = 0; i < 240; i++) {
-        const a = i / 240 * Math.PI * 2;
-        points.push(new THREE.Vector3(Math.sin(a) * rx, y, Math.cos(a) * rz));
-      }
-      return new THREE.CatmullRomCurve3(points, true, "centripetal");
+    // Yas Marina-inspired layout: long start/finish straight, tight hairpins,
+    // a flowing middle sector and a technical final sector (not a surveyed replica).
+    const trackPoints = [
+      new THREE.Vector3(-22, 0, 15), new THREE.Vector3(17, 0, 15),
+      new THREE.Vector3(25, 0, 12), new THREE.Vector3(27, 0, 7),
+      new THREE.Vector3(23, 0, 3), new THREE.Vector3(5, 0, 3),
+      new THREE.Vector3(0, 0, -1), new THREE.Vector3(4, 0, -7),
+      new THREE.Vector3(20, 0, -13), new THREE.Vector3(23, 0, -19),
+      new THREE.Vector3(18, 0, -25), new THREE.Vector3(5, 0, -27),
+      new THREE.Vector3(-5, 0, -25), new THREE.Vector3(-9, 0, -20),
+      new THREE.Vector3(-8, 0, -12), new THREE.Vector3(-13, 0, -7),
+      new THREE.Vector3(-23, 0, -5), new THREE.Vector3(-28, 0, -1),
+      new THREE.Vector3(-27, 0, 5), new THREE.Vector3(-22, 0, 15)
+    ];
+    const centerCurve = new THREE.CatmullRomCurve3(trackPoints, true, "centripetal");
+    const samples = centerCurve.getSpacedPoints(420);
+    const offsetPoints = (distance: number) => samples.slice(0, -1).map((p, i) => {
+      const tangent = samples[Math.min(i + 1, samples.length - 1)].clone().sub(samples[Math.max(0, i - 1)]).normalize();
+      return new THREE.Vector2(p.x - tangent.z * distance, p.z + tangent.x * distance);
+    });
+    const addRibbon = (outerDistance: number, innerDistance: number, color: string, y: number) => {
+      const outer = offsetPoints(outerDistance);
+      const inner = offsetPoints(innerDistance).reverse();
+      const shape = new THREE.Shape();
+      outer.forEach((p, i) => i === 0 ? shape.moveTo(p.x, p.y) : shape.lineTo(p.x, p.y));
+      shape.closePath();
+      const hole = new THREE.Path();
+      inner.forEach((p, i) => i === 0 ? hole.moveTo(p.x, p.y) : hole.lineTo(p.x, p.y));
+      hole.closePath(); shape.holes.push(hole);
+      const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape, 2), material(color, 0.95));
+      mesh.rotation.x = -Math.PI / 2; mesh.position.y = y; mesh.receiveShadow = true; scene.add(mesh);
     };
-    const addLine = (rx: number, rz: number, color: string, radius: number) => {
-      scene.add(new THREE.Mesh(new THREE.TubeGeometry(makeCurve(rx, rz), 240, radius, 6, true), material(color)));
+    // Wide sandy run-off, a darker asphalt strip, then painted edge lines.
+    addRibbon(13.5, 6.6, "#b7a47f", -0.035);
+    addRibbon(6.6, -6.6, "#303238", 0.006);
+    const addTrackLine = (distance: number, color: string, radius: number) => {
+      const pts = centerCurve.getSpacedPoints(420).map((p, i, arr) => {
+        const tangent = arr[(i + 1) % arr.length].clone().sub(arr[(i - 1 + arr.length) % arr.length]).normalize();
+        return new THREE.Vector3(p.x - tangent.z * distance, 0.055, p.z + tangent.x * distance);
+      });
+      const curve = new THREE.CatmullRomCurve3(pts, true, "centripetal");
+      scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 420, radius, 5, true), material(color)));
     };
-    addLine(17.35, 27.35, "#f5f2e9", 0.13);
-    addLine(8.65, 18.65, "#f5f2e9", 0.13);
-    addLine(13, 23, "#bfc1c4", 0.045);
+    addTrackLine(6.25, "#f5f2e9", 0.12);
+    addTrackLine(-6.25, "#f5f2e9", 0.12);
+    addTrackLine(0, "#bfc1c4", 0.035);
 
+    // Red/white kerbs placed along alternating sections of the track edge.
     const curbWhite = material("#f6f3e9");
     const curbRed = material("#d93d4c");
-    for (let i = 0; i < 160; i++) {
-      const a = i / 160 * Math.PI * 2;
+    for (let i = 0; i < 170; i++) {
+      const p = centerCurve.getPointAt(i / 170);
+      const t = centerCurve.getTangentAt(i / 170).normalize();
+      const n = new THREE.Vector3(-t.z, 0, t.x);
       for (const side of [-1, 1]) {
-        const n = new THREE.Vector3(Math.sin(a), 0, Math.cos(a)).normalize();
-        const curb = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.09, 0.42), i % 2 ? curbWhite : curbRed);
-        curb.position.set(Math.sin(a) * 13 + n.x * side * 5.25, 0.085, Math.cos(a) * 23 + n.z * side * 5.25);
-        curb.rotation.y = Math.atan2(Math.cos(a) * 13, -Math.sin(a) * 23);
-        curb.castShadow = true; scene.add(curb);
+        if ((i % 17 < 7) || (i % 29 < 9)) {
+          const curb = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.075, 0.52), i % 2 ? curbWhite : curbRed);
+          curb.position.set(p.x + n.x * side * 6.45, 0.075, p.z + n.z * side * 6.45);
+          curb.rotation.y = Math.atan2(t.x, t.z);
+          scene.add(curb);
+        }
       }
     }
+    // A recognizable start/finish stripe across the main straight.
+    const startLine = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.025, 12.2), material("#ffffff", 0.65));
+    startLine.position.set(-14, 0.03, 15); scene.add(startLine);
     const standMat = material("#2b303a");
     for (let i = 0; i < 20; i++) {
       const a = i / 20 * Math.PI * 2;
@@ -153,10 +184,11 @@ export default function HomePage() {
     const sim = { running: false, speed: 0, angle: 0, lateral: 0, lateralVelocity: 0, steer: 0,
       lapElapsed: 0, lap: 1, lapTimes: [] as number[], offTrack: false, lastUi: 0, lastFrame: 0 };
     const updateCarAndCamera = () => {
-      const a = sim.angle;
-      const tangent = new THREE.Vector3(Math.cos(a) * 13, 0, -Math.sin(a) * 23).normalize();
-      const normal = new THREE.Vector3(Math.sin(a), 0, Math.cos(a)).normalize();
-      car.position.set(Math.sin(a) * 13 + normal.x * sim.lateral, 0, Math.cos(a) * 23 + normal.z * sim.lateral);
+      const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
+      const center = centerCurve.getPointAt(u);
+      const tangent = centerCurve.getTangentAt(u).normalize();
+      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
+      car.position.set(center.x + normal.x * sim.lateral, 0, center.z + normal.z * sim.lateral);
       car.rotation.y = Math.atan2(tangent.x, tangent.z) + sim.steer * 0.08;
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
       const behind = new THREE.Vector3(0, 3.7, -8.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y).add(car.position);
@@ -194,9 +226,9 @@ export default function HomePage() {
         sim.lateralVelocity += sim.steer * (4.4 + sim.speed / 70) * grip * dt;
         sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.4 : 2.6));
         sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -8, 8);
-        sim.offTrack = Math.abs(sim.lateral) > 4.8;
+        sim.offTrack = Math.abs(sim.lateral) > 5.35;
         if (sim.offTrack) sim.speed = Math.max(0, sim.speed - 36 * dt);
-        sim.angle += (sim.speed / 3.6) / 17.4 * dt;
+        sim.angle += ((sim.speed / 3.6) / Math.max(22, centerCurve.getLength() / (Math.PI * 2))) * dt * (Math.PI * 2);
         sim.lapElapsed += dt;
         if (sim.angle >= Math.PI * 2) {
           sim.angle -= Math.PI * 2; sim.lapTimes.push(sim.lapElapsed); sim.lap += 1; sim.lapElapsed = 0;
