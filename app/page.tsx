@@ -383,18 +383,22 @@ export default function HomePage() {
       <section className="sim-game" aria-label="3D driving simulator">
         <div className="sim-view" onPointerDown={() => { if (!running) start(); }}><div className="sim-world" ref={mountRef} />
           <div className="mini-map" aria-label="서킷 미니맵"><span className="mini-map-label">CIRCUIT MAP</span><svg viewBox="0 0 160 110" role="img" aria-label="실제 주행 경로 미니맵"><path d={miniMapPath} fill="rgba(182,154,255,.1)" stroke="#b8a2ef" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round"/><path d={miniMapPath} fill="none" stroke="#312c3b" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/><circle cx={miniMapPosition.x} cy={miniMapPosition.y} r="4" fill="#fff" stroke="#8c5cff" strokeWidth="2"/><circle cx={miniMapPosition.x} cy={miniMapPosition.y} r="7" fill="none" stroke="#cbb8ff" strokeWidth="1" opacity=".7"/></svg></div>
-          <div className="sim-overlay sim-overlay-top"><span className={trackState.startsWith("OFF") ? "state-warning" : ""}>{trackState}</span><span>SESSION · PRACTICE</span></div>
-          <div className="speed-hud"><strong>{speed}</strong><span>KM/H</span><i>GEAR <b>{gear}</b></i></div>
-          <div className="rpm-hud"><span>RPM</span><div className="rpm-bar"><i style={{ width: clamp((rpm - 3000) / 6000 * 100, 0, 100) + "%" }} /></div><b>{rpm.toLocaleString()}</b></div>
-          <div className="lap-hud"><span>LAP</span><b>{String(lap).padStart(2, "0")}</b><small>{progress}%</small><div className="lap-progress"><i style={{ width: progress + "%" }} /></div></div>
-          {!running && <div className="sim-ready"><span>RACING SIMULATOR</span><b>{message}</b><small>Use the controls to accelerate and steer</small></div>}
+          <div className="race-hud-top">
+            <div className="race-position"><strong>P<span>1</span></strong><i>/ 1</i></div>
+            <div className="race-hud-cell race-lap"><small>LAP</small><strong>{lap}<i>/3</i></strong></div>
+            <div className="race-hud-cell race-time"><small>TIME</small><strong>{lapTime}</strong></div>
+            <div className="race-hud-cell race-speed"><small>SPEED</small><strong>{speed}<i>km/h</i></strong></div>
+            <div className="race-hud-cell race-resources"><div><small>FUEL</small><strong className="fuel-bars">▮▮▮▮▮▮▮▮▮</strong><i>NOT ACTIVE</i></div><div><small>TYRES</small><strong className="tyre-bars">▮▮▮▮▮▮▮▮▮</strong><i>NOT ACTIVE</i></div></div>
+          </div>
+          <div className="race-flag-banner">{running ? (trackState.startsWith("OFF") ? "OFF TRACK — REDUCE SPEED" : "SESSION IN PROGRESS") : "TAP THE TRACK TO START"}</div>
+          <div className="race-rpm"><span>RPM</span><div className="rpm-bar"><i style={{ width: clamp((rpm - 3000) / 6000 * 100, 0, 100) + "%" }} /></div><b>{rpm.toLocaleString()}</b><span className="race-gear">GEAR {gear}</span></div>
+          {!running && <div className="sim-ready"><span>RACING SIMULATOR</span><b>{message}</b><small>Tap the track or press accelerator to begin</small></div>}
+          <div className="race-controls race-controls-left">{button("LEFT", "left")}{button("RIGHT", "right")}</div>
+          <div className="race-controls race-controls-right">{button("BRAKE", "brake", "sim-brake")}{button("GAS", "gas", "sim-gas")}</div>
+          <div className="race-key-hint">← → STEER&nbsp;&nbsp; · &nbsp;&nbsp;↑ THROTTLE&nbsp;&nbsp; · &nbsp;&nbsp;↓ BRAKE</div>
         </div>
-      <section className="sim-controls-panel"><div className="sim-controls-head"><div><p className="sim-eyebrow">DRIVER INPUT</p><h2>Controls</h2></div><span>HOLD TO INPUT</span></div>
-         <div className="sim-controls-layout"><div className="sim-steering">{button("STEER LEFT", "left")}{button("STEER RIGHT", "right")}</div><div className="sim-pedals">{button("BRAKE", "brake", "sim-brake")}{button("THROTTLE", "gas", "sim-gas")}</div></div>
-        <p className="sim-hint">Keyboard: ← → steer · ↑ / W throttle · ↓ / S brake · ESC pause. Mobile: hold the on-screen controls.</p>
-      </section>
         <div className="sim-telemetry"><div><span>SESSION TIME</span><strong>{lapTime}</strong></div><div><span>LAST LAP</span><strong>{lastLap}</strong></div><div><span>PERSONAL BEST</span><strong>{bestLap}</strong></div></div>
-        <div className="sim-actions">{!running ? <button className="sim-start" onClick={start}>▶ START SESSION</button> : <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button></div>
+        <div className="sim-actions">{running && <button className="sim-start sim-pause" onClick={pause}>Ⅱ PAUSE SESSION</button>}<button className="sim-reset" onClick={reset}>↻ RESET</button><span className="sim-hint">Tap the track to start · Hold controls to drive</span></div>
       </section>
 
       {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}>
