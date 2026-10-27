@@ -259,35 +259,58 @@ export default function HomePage() {
         const throttle = c.gas ? 1 : 0;
         const brake = c.brake ? 1 : 0;
         const steer = (c.right ? 1 : 0) - (c.left ? 1 : 0);
-        // Target: 0-100 km/h in about 2 seconds, then 100-320 in roughly 6 more
-        // seconds on a straight. Aerodynamic drag increases at high speed.
-        const accelerationKphPerSecond = sim.speed < 100 ? 50 : 36.7;
-        const dragKphPerSecond = 0.000035 * sim.speed * sim.speed;
-        const rollingLoss = throttle ? 0 : 3.2;
-        // Disable automatic speed assists; braking and drag remain driver/physics inputs.
-        sim.speed = clamp(sim.speed + (throttle * accelerationKphPerSecond - dragKphPerSecond - brake * 150 - rollingLoss) * dt, 0, 320);
-        if (steeringAssistRef.current) {
-          // Assisted steering smooths input changes to keep the car more stable.
-          sim.steer += (steer - sim.steer) * Math.min(1, dt * (sim.speed > 180 ? 4 : 7));
-        } else {
-          // Raw steering follows the key/button input immediately.
-          sim.steer = steer;
+        // Basic driving physics v1:
+        // speed is stored in km/h; lateral movement is measured in world units.
+        // Throttle ramps speed up, brakes provide strong deceleration, and drag /
+        // rolling resistance slow the car when the driver lifts off.
+        const speedKph = sim.speed;
+        const accelerationKphPerSecond = speedKph < 100 ? 50 : speedKph < 220 ? 37 : 24;
+        const aeroDrag = 0.000045 * speedKph * speedKph;
+        const rollingResistance = 2.4 + speedKph * 0.012;
+        const engineForce = throttle * accelerationKphPerSecond * (speedKph > 285 ? 0.55 : 1);
+        const brakeForce = brake * (speedKph > 40 ? 170 : 95);
+        sim.speed = clamp(
+          speedKph + (engineForce - aeroDrag - rollingResistance - brakeForce) * dt,
+          0,
+          320
+        );
+
+        // Steering input is smoothed even when assistance is off; assistance only
+        // makes the steering response calmer. Steering authority fades with speed.
+        const steerResponse = steeringAssistRef.current ? 5.5 : 10;
+        sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
+        const speedFactor = clamp(1.18 - speedKph / 360, 0.28, 1.05);
+        const requestedYaw = sim.steer * speedFactor;
+
+        // Lateral tyre force builds from steering. At low speed it settles quickly;
+        // at high speed the car carries more momentum and takes longer to recover.
+        const grip = sim.offTrack ? 0.42 : 1;
+        sim.lateralVelocity += requestedYaw * (4.8 + speedKph / 105) * grip * dt;
+        const lateralDamping = speedKph > 200 ? 0.7 : speedKph > 100 ? 1.35 : 2.25;
+        sim.lateralVelocity *= Math.max(0, 1 - lateralDamping * dt);
+
+        // Hard braking transfers the car toward stability, while steering at speed
+        // can overwhelm available grip and create a controlled slide.
+        const steeringLoad = Math.abs(sim.steer) * (speedKph / 260);
+        const gripLimit = sim.offTrack ? 0.65 : 1.15;
+        if (steeringLoad > gripLimit && speedKph > 90) {
+          const excess = steeringLoad - gripLimit;
+          sim.lateralVelocity += Math.sign(sim.steer) * excess * 2.1 * dt;
+          sim.speed = Math.max(0, sim.speed - excess * 10 * dt);
         }
-        // Speed-sensitive steering: high-speed direction changes are deliberately
-        // slower, while tight corners demand braking before turn-in.
-        const baseGrip = 1;
-        const steeringAuthority = 1;
-        sim.lateralVelocity += sim.steer * (5.2 + sim.speed / 95) * baseGrip * steeringAuthority * dt;
-        sim.lateralVelocity *= Math.max(0, 1 - dt * (sim.speed > 180 ? 1.0 : 2.2));
-        sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -15, 15);
+
+        sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -16, 16);
         if (trackGuideRef.current) {
+          // Track guide is an optional driving aid, not a mandatory physics force.
           sim.lateral *= Math.max(0, 1 - dt * 1.6);
           sim.lateralVelocity *= Math.max(0, 1 - dt * 2.0);
         }
+
         sim.offTrack = Math.abs(sim.lateral) > 8.8;
         if (sim.offTrack) {
-          sim.speed = Math.max(0, sim.speed - 58 * dt);
-          sim.lateralVelocity *= 0.92;
+          // Runoff surface has much less grip and produces extra speed loss.
+          sim.speed = Math.max(0, sim.speed - (22 + speedKph * 0.12) * dt);
+          sim.lateralVelocity *= Math.max(0, 1 - dt * 1.0);
         }
         // No automatic corner speed limiter: braking into corners is entirely manual.
         const trackLength = centerCurve.getLength();
