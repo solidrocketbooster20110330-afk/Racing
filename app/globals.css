@@ -192,3 +192,19 @@ button{font:inherit}
   .race-position{padding-inline:4px}
   .race-hud-cell{padding-inline:4px}
 }
+
+
+/* Touch controls: large icon-only buttons matching the reference racing HUD */
+.race-controls{bottom:16px;gap:8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.race-controls .sim-control{width:clamp(82px,8vw,112px);height:clamp(78px,7.5vw,108px);display:flex;align-items:center;justify-content:center;padding:0;border-radius:5px;border:3px solid rgba(166,183,214,.34);background:rgba(38,47,65,.78);color:#f6f7fb;font-size:clamp(30px,3vw,42px);font-weight:900;line-height:1;box-shadow:0 4px 12px rgba(0,0,0,.22);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);touch-action:none}
+.race-controls .sim-control span{display:none}
+.race-controls .sim-control:active{background:rgba(100,118,150,.82);border-color:rgba(220,229,247,.7);transform:translateY(1px)}
+.race-controls .sim-control.sim-brake,.race-controls .sim-control.sim-gas{background:rgba(38,47,65,.78);border-color:rgba(166,183,214,.34)}
+.race-controls .sim-control.sim-brake:active,.race-controls .sim-control.sim-gas:active{background:rgba(100,118,150,.82)}
+@media(max-width:680px){
+  .race-controls{bottom:12px;gap:6px}
+  .race-controls .sim-control{width:clamp(58px,16vw,82px);height:clamp(58px,16vw,82px);font-size:clamp(24px,7vw,34px);border-width:2px}
+}
+@media(max-width:380px){
+  .race-controls .sim-control{width:56px;height:58px;font-size:24px}
+}
