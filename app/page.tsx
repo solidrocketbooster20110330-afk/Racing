@@ -230,11 +230,25 @@ export default function HomePage() {
       const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
       const guidedLateral = trackGuideRef.current ? sim.lateral * 0.25 : sim.lateral;
       car.position.set(center.x + normal.x * guidedLateral, 0, center.z + normal.z * guidedLateral);
-      car.rotation.y = Math.atan2(tangent.x, tangent.z) + sim.steer * 0.08;
+
+      // Keep the chase camera aligned to the circuit tangent. Steering changes
+      // the car's lateral position, but must not yaw the whole camera view.
+      const trackYaw = Math.atan2(tangent.x, tangent.z);
+      car.rotation.y = trackYaw;
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
-      const behind = new THREE.Vector3(0, 18, -44).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y).add(car.position);
-      camera.position.lerp(behind, 0.14);
-      const target = car.position.clone().add(new THREE.Vector3(0, 4, 22).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y));
+
+      // Follow only a small portion of lateral movement so the car stays framed
+      // without making the horizon swing left and right with every steering input.
+      const cameraAnchor = center.clone().addScaledVector(normal, guidedLateral * 0.22);
+      const behind = new THREE.Vector3(0, 18, -44)
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), trackYaw)
+        .add(cameraAnchor);
+      camera.position.lerp(behind, 0.10);
+
+      // Aim along the track, not at the steering-rotated car body.
+      const target = center.clone()
+        .addScaledVector(normal, guidedLateral * 0.12)
+        .add(new THREE.Vector3(0, 4, 22).applyAxisAngle(new THREE.Vector3(0, 1, 0), trackYaw));
       camera.lookAt(target);
     };
     updateCarAndCamera();
