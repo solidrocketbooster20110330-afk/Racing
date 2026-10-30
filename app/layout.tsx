@@ -5,10 +5,12 @@ export const metadata: Metadata = {
   title: "RACING | Arcade Motorsport",
   description: "A mobile-friendly arcade racing game. Accelerate, brake, steer and chase your best lap.",
   applicationName: "Racing",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Racing"
+    title: "Racing",
+    startupImage: []
   }
 };
 
