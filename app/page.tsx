@@ -213,15 +213,25 @@ export default function HomePage() {
     const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.04, 8, 20, Math.PI), lilac);
     halo.rotation.x = Math.PI / 2; halo.position.set(0, 0.85, 0.12); car.add(halo);
     const wheels: THREE.Mesh[] = [];
+    const frontWheelSteering: THREE.Group[] = [];
     for (const x of [-0.91, 0.91]) for (const z of [-1.05, 1.12]) {
+      const isFront = z > 0;
+      const wheelAssembly = new THREE.Group();
+      wheelAssembly.position.set(x, 0.36, z);
+      car.add(wheelAssembly);
+      if (isFront) frontWheelSteering.push(wheelAssembly);
       const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.37, 0.28, 18), black);
-      wheel.rotation.z = Math.PI / 2; wheel.position.set(x, 0.36, z); wheel.castShadow = true; car.add(wheel); wheels.push(wheel);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.castShadow = true;
+      wheelAssembly.add(wheel);
+      wheels.push(wheel);
       const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.29, 12), material("#aaaeb8", 0.4, 0.5));
-      hub.rotation.z = Math.PI / 2; hub.position.set(x * 1.01, 0.36, z); car.add(hub);
+      hub.rotation.z = Math.PI / 2;
+      wheelAssembly.add(hub);
     }
     scene.add(car);
 
-    const sim = { running: false, speed: 0, angle: 0, lateral: 0, lateralVelocity: 0, steer: 0,
+    const sim = { running: false, speed: 0, angle: 0, lateral: 0, headingOffset: 0, steer: 0,
       lapElapsed: 0, lap: 1, lapTimes: [] as number[], offTrack: false, lastUi: 0, lastFrame: 0 };
     const updateCarAndCamera = () => {
       const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
@@ -234,7 +244,10 @@ export default function HomePage() {
       // Keep the chase camera aligned to the circuit tangent. Steering changes
       // the car's lateral position, but must not yaw the whole camera view.
       const trackYaw = Math.atan2(tangent.x, tangent.z);
-      car.rotation.y = trackYaw;
+      car.rotation.y = trackYaw + sim.headingOffset;
+      const speedSteerFade = clamp(1.08 - sim.speed / 330, 0.24, 1);
+      const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
+      frontWheelSteering.forEach(wheel => { wheel.rotation.y = frontWheelAngle; });
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
 
       // Follow only a small portion of lateral movement so the car stays framed
@@ -256,7 +269,7 @@ export default function HomePage() {
     const onStart = () => { sim.running = true; sim.lastFrame = 0; };
     const onPause = () => { sim.running = false; controlsRef.current = { ...emptyControls }; };
     const onReset = () => {
-      Object.assign(sim, { running: false, speed: 0, angle: 0, lateral: 0, lateralVelocity: 0, steer: 0, lapElapsed: 0, lap: 1, lapTimes: [], offTrack: false, lastFrame: 0 });
+      Object.assign(sim, { running: false, speed: 0, angle: 0, lateral: 0, headingOffset: 0, steer: 0, lapElapsed: 0, lap: 1, lapTimes: [], offTrack: false, lastFrame: 0 });
       updateCarAndCamera();
     };
     window.addEventListener("racing-start", onStart);
@@ -289,42 +302,32 @@ export default function HomePage() {
           320
         );
 
-        // Steering input is smoothed even when assistance is off; assistance only
-        // makes the steering response calmer. Steering authority fades with speed.
-        const steerResponse = steeringAssistRef.current ? 5.5 : 10;
+        // Bicycle-model steering: the front wheels turn, creating yaw from
+        // forward speed. The chassis then travels along its heading instead of
+        // being pushed sideways by the steering input.
+        const steerResponse = steeringAssistRef.current ? 5.5 : 8;
         sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
-        const speedFactor = clamp(1.18 - speedKph / 360, 0.28, 1.05);
-        const requestedYaw = sim.steer * speedFactor;
-
-        // Lateral tyre force builds from steering. At low speed it settles quickly;
-        // at high speed the car carries more momentum and takes longer to recover.
-        const grip = sim.offTrack ? 0.42 : 1;
-        sim.lateralVelocity += requestedYaw * (4.8 + speedKph / 105) * grip * dt;
-        const lateralDamping = speedKph > 200 ? 0.7 : speedKph > 100 ? 1.35 : 2.25;
-        sim.lateralVelocity *= Math.max(0, 1 - lateralDamping * dt);
-
-        // Hard braking transfers the car toward stability, while steering at speed
-        // can overwhelm available grip and create a controlled slide.
-        const steeringLoad = Math.abs(sim.steer) * (speedKph / 260);
-        const gripLimit = sim.offTrack ? 0.65 : 1.15;
-        if (steeringLoad > gripLimit && speedKph > 90) {
-          const excess = steeringLoad - gripLimit;
-          sim.lateralVelocity += Math.sign(sim.steer) * excess * 2.1 * dt;
-          sim.speed = Math.max(0, sim.speed - excess * 10 * dt);
-        }
-
-        sim.lateral = clamp(sim.lateral + sim.lateralVelocity * dt, -16, 16);
+        const speedSteerFade = clamp(1.08 - speedKph / 330, 0.24, 1);
+        const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
+        const wheelbase = 2.17;
+        const speedMps = sim.speed / 3.6;
+        const grip = sim.offTrack ? 0.48 : 1;
+        const yawRate = (speedMps / wheelbase) * Math.tan(frontWheelAngle) * grip;
+        sim.headingOffset += yawRate * dt;
+        // The car moves forward along its heading; lateral movement is only the
+        // geometric result of that heading differing from the track tangent.
+        sim.lateral += Math.sin(sim.headingOffset) * speedMps * dt;
+        sim.lateral = clamp(sim.lateral, -24, 24);
         if (trackGuideRef.current) {
-          // Track guide is an optional driving aid, not a mandatory physics force.
           sim.lateral *= Math.max(0, 1 - dt * 1.6);
-          sim.lateralVelocity *= Math.max(0, 1 - dt * 2.0);
+          sim.headingOffset *= Math.max(0, 1 - dt * 0.18);
         }
 
         sim.offTrack = Math.abs(sim.lateral) > 8.8;
         if (sim.offTrack) {
           // Runoff surface has much less grip and produces extra speed loss.
           sim.speed = Math.max(0, sim.speed - (22 + speedKph * 0.12) * dt);
-          sim.lateralVelocity *= Math.max(0, 1 - dt * 1.0);
+          sim.headingOffset *= Math.max(0, 1 - dt * 0.35);
         }
         // No automatic corner speed limiter: braking into corners is entirely manual.
         const trackLength = centerCurve.getLength();
