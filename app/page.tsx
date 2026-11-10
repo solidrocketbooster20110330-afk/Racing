@@ -339,7 +339,12 @@ export default function HomePage() {
         }
         // No automatic corner speed limiter: braking into corners is entirely manual.
         const trackLength = centerCurve.getLength();
-        sim.angle += ((sim.speed / 3.6) / trackLength) * dt * (Math.PI * 2);
+        // Resolve rear-axle velocity into the circuit's tangent and normal.
+        // Advancing the lap coordinate by the cosine component prevents the
+        // rear axle from moving sideways while still travelling at full
+        // forward speed (the visual "rear sliding out" artifact).
+        const forwardAlongTrack = Math.cos(sim.headingOffset);
+        sim.angle += (((sim.speed / 3.6) * forwardAlongTrack) / trackLength) * dt * (Math.PI * 2);
         sim.lapElapsed += dt;
         if (sim.angle >= Math.PI * 2) {
           sim.angle -= Math.PI * 2; sim.lapTimes.push(sim.lapElapsed); sim.lap += 1; sim.lapElapsed = 0;
