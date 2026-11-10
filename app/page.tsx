@@ -239,12 +239,20 @@ export default function HomePage() {
       const tangent = centerCurve.getTangentAt(u).normalize();
       const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
       const guidedLateral = trackGuideRef.current ? sim.lateral * 0.25 : sim.lateral;
-      car.position.set(center.x + normal.x * guidedLateral, 0, center.z + normal.z * guidedLateral);
+
+      // Use the rear axle as the vehicle's motion reference. The rear axle
+      // follows the driven path; the chassis origin is placed one half-wheelbase
+      // forward from it, so steering makes the nose sweep around the rear axle
+      // instead of making the rear swing around a front pivot.
+      const rearAxle = center.clone().addScaledVector(normal, guidedLateral);
 
       // Keep the chase camera aligned to the circuit tangent. Steering changes
-      // the car's lateral position, but must not yaw the whole camera view.
+      // the car's heading while the rear axle remains the reference point.
       const trackYaw = Math.atan2(tangent.x, tangent.z);
-      car.rotation.y = trackYaw + sim.headingOffset;
+      const headingYaw = trackYaw + sim.headingOffset;
+      car.rotation.y = headingYaw;
+      const forward = new THREE.Vector3(Math.sin(headingYaw), 0, Math.cos(headingYaw));
+      car.position.copy(rearAxle).addScaledVector(forward, 1.05);
       const speedSteerFade = clamp(1.08 - sim.speed / 330, 0.24, 1);
       const frontWheelAngle = sim.steer * 0.18 * speedSteerFade;
       frontWheelSteering.forEach(wheel => { wheel.rotation.y = frontWheelAngle; });
