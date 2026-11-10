@@ -7,6 +7,8 @@ type Control = "left" | "right" | "gas" | "brake";
 type Controls = Record<Control, boolean>;
 const emptyControls: Controls = { left: false, right: false, gas: false, brake: false };
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+const trackLengthForCurvature = (curve: THREE.CatmullRomCurve3) => curve.getLength();
+
 const fmtTime = (v: number) => {
   const t = Math.max(0, v);
   return String(Math.floor(t / 60)).padStart(2, "0") + ":" + (t % 60).toFixed(3).padStart(6, "0");
@@ -321,9 +323,26 @@ export default function HomePage() {
         const speedMps = sim.speed / 3.6;
         const grip = sim.offTrack ? 0.48 : 1;
         const yawRate = (speedMps / wheelbase) * Math.tan(frontWheelAngle) * grip;
-        sim.headingOffset += yawRate * dt;
-        // The car moves forward along its heading; lateral movement is only the
-        // geometric result of that heading differing from the track tangent.
+
+        // The heading offset is relative to the track tangent, not an absolute
+        // world heading. As the circuit curves, its tangent rotates too. Subtract
+        // that track rotation so the rear axle follows the car's actual heading
+        // instead of accumulating a sideways drift relative to the circuit.
+        const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
+        const curveStep = 0.001;
+        const tangentBefore = centerCurve.getTangentAt((u - curveStep + 1) % 1).normalize();
+        const tangentAfter = centerCurve.getTangentAt((u + curveStep) % 1).normalize();
+        const yawBefore = Math.atan2(tangentBefore.x, tangentBefore.z);
+        const yawAfter = Math.atan2(tangentAfter.x, tangentAfter.z);
+        const tangentYawDelta = Math.atan2(
+          Math.sin(yawAfter - yawBefore),
+          Math.cos(yawAfter - yawBefore)
+        );
+        const trackCurvature = tangentYawDelta / (trackLengthForCurvature(centerCurve) * curveStep * 2);
+        sim.headingOffset += (yawRate - trackCurvature * speedMps) * dt;
+
+        // Rear-axle motion is projected into the track tangent/normal frame.
+        // The nose responds first to steering; the rear follows its new heading.
         sim.lateral += Math.sin(sim.headingOffset) * speedMps * dt;
         sim.lateral = clamp(sim.lateral, -24, 24);
         if (trackGuideRef.current) {
