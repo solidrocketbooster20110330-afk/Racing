@@ -268,7 +268,7 @@ export default function HomePage() {
       car.rotation.y = sim.heading;
       car.position.set(sim.x, 0, sim.z);
       const speedSteerFade = clamp(1.08 - sim.speed / 330, 0.24, 1);
-      const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
+      const frontWheelAngle = -sim.steer * (Math.PI / 18) * speedSteerFade;
       frontWheelSteering.forEach(wheel => { wheel.rotation.y = frontWheelAngle; });
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
 
@@ -308,7 +308,7 @@ export default function HomePage() {
         const c = controlsRef.current;
         const throttle = c.gas ? 1 : 0;
         const brake = c.brake ? 1 : 0;
-        const steer = (c.right ? 1 : 0) - (c.left ? 1 : 0);
+        const steer = (c.left ? 1 : 0) - (c.right ? 1 : 0);
         // Basic driving physics v1:
         // speed is stored in km/h; lateral movement is measured in world units.
         // Throttle ramps speed up, brakes provide strong deceleration, and drag /
@@ -327,10 +327,10 @@ export default function HomePage() {
 
         // Steering wheel input only changes the front axle angle. At zero
         // speed the chassis and rear axle remain completely still.
-        const steerResponse = steeringAssistRef.current ? 5.5 : 8;
+        const steerResponse = steeringAssistRef.current ? 2.8 : 3.8;
         sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
         const speedSteerFade = clamp(1.08 - speedKph / 330, 0.24, 1);
-        const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
+        const frontWheelAngle = -sim.steer * (Math.PI / 18) * speedSteerFade;
         const speedMps = sim.speed / 3.6;
         const wheelbase = 2.17;
         const grip = sim.offTrack ? 0.48 : 1;
