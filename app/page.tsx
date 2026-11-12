@@ -268,7 +268,7 @@ export default function HomePage() {
       car.rotation.y = sim.heading;
       car.position.set(sim.x, 0, sim.z);
       const speedSteerFade = clamp(1.08 - sim.speed / 330, 0.24, 1);
-      const frontWheelAngle = sim.steer * (Math.PI / 18) * speedSteerFade;
+      const frontWheelAngle = sim.steer * (Math.PI / 36) * speedSteerFade;
       frontWheelSteering.forEach(wheel => { wheel.rotation.y = frontWheelAngle; });
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
 
@@ -330,7 +330,7 @@ export default function HomePage() {
         const steerResponse = steeringAssistRef.current ? 2.8 : 3.8;
         sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
         const speedSteerFade = clamp(1.08 - speedKph / 330, 0.24, 1);
-        const frontWheelAngle = sim.steer * (Math.PI / 18) * speedSteerFade;
+        const frontWheelAngle = sim.steer * (Math.PI / 36) * speedSteerFade;
         const speedMps = sim.speed / 3.6;
         const wheelbase = 2.17;
         const grip = sim.offTrack ? 0.48 : 1;
