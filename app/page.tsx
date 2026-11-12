@@ -7,7 +7,6 @@ type Control = "left" | "right" | "gas" | "brake";
 type Controls = Record<Control, boolean>;
 const emptyControls: Controls = { left: false, right: false, gas: false, brake: false };
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-const trackLengthForCurvature = (curve: THREE.CatmullRomCurve3) => curve.getLength();
 
 const fmtTime = (v: number) => {
   const t = Math.max(0, v);
@@ -350,7 +349,7 @@ export default function HomePage() {
         // Optional track guide gently nudges the vehicle toward the circuit
         // center; it does not create steering or move the car when stationary.
         const distanceFromTrack = findNearestTrackPoint();
-        if (trackGuideRef.current && distanceFromTrack > 1.5) {
+        if (trackGuideRef.current && speedMps > 0.5 && distanceFromTrack > 1.5) {
           const nearest = samples[sim.nearestIndex];
           const correction = Math.min(1, dt * 0.65);
           sim.x += (nearest.x - sim.x) * correction;
