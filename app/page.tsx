@@ -274,11 +274,11 @@ export default function HomePage() {
 
       const forward = new THREE.Vector3(Math.sin(sim.heading), 0, Math.cos(sim.heading));
       const cameraAnchor = new THREE.Vector3(sim.x, 0, sim.z);
-      const behind = new THREE.Vector3(0, 18, -44)
+      const behind = new THREE.Vector3(0, 10, -26)
         .applyAxisAngle(new THREE.Vector3(0, 1, 0), sim.heading)
         .add(cameraAnchor);
       camera.position.lerp(behind, 0.10);
-      const target = cameraAnchor.clone().addScaledVector(forward, 22).add(new THREE.Vector3(0, 4, 0));
+      const target = cameraAnchor.clone().addScaledVector(forward, 14).add(new THREE.Vector3(0, 2.5, 0));
       camera.lookAt(target);
     };
     updateCarAndCamera();
