@@ -32,6 +32,8 @@ export default function HomePage() {
   const [trackGuide, setTrackGuide] = useState(false);
   const trackGuideRef = useRef(false);
   const [steeringAssist, setSteeringAssist] = useState(false);
+  const [beginnerMode, setBeginnerMode] = useState(false);
+  const beginnerModeRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const steeringAssistRef = useRef(false);
 
@@ -57,6 +59,17 @@ export default function HomePage() {
     setSteeringAssist(current => {
       steeringAssistRef.current = !current;
       return !current;
+    });
+  }, []);
+  const toggleBeginnerMode = useCallback(() => {
+    setBeginnerMode(current => {
+      const next = !current;
+      beginnerModeRef.current = next;
+      steeringAssistRef.current = next;
+      trackGuideRef.current = next;
+      setSteeringAssist(next);
+      setTrackGuide(next);
+      return next;
     });
   }, []);
 
@@ -306,7 +319,7 @@ export default function HomePage() {
       sim.lastFrame = now;
       if (sim.running && dt > 0) {
         const c = controlsRef.current;
-        const throttle = c.gas ? 1 : 0;
+        const throttle = c.gas ? (beginnerModeRef.current ? 0.65 : 1) : 0;
         const brake = c.brake ? 1 : 0;
         const steer = (c.left ? 1 : 0) - (c.right ? 1 : 0);
         // Basic driving physics v1:
@@ -322,12 +335,12 @@ export default function HomePage() {
         sim.speed = clamp(
           speedKph + (engineForce - aeroDrag - rollingResistance - brakeForce) * dt,
           0,
-          320
+          beginnerModeRef.current ? 160 : 320
         );
 
         // Steering wheel input only changes the front axle angle. At zero
         // speed the chassis and rear axle remain completely still.
-        const steerResponse = steeringAssistRef.current ? 2.8 : 3.8;
+        const steerResponse = beginnerModeRef.current ? 4.5 : steeringAssistRef.current ? 2.8 : 3.8;
         sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
         const speedSteerFade = clamp(1.08 - speedKph / 330, 0.24, 1);
         const frontWheelAngle = sim.steer * (Math.PI / 36) * speedSteerFade;
@@ -349,7 +362,7 @@ export default function HomePage() {
         // Optional track guide gently nudges the vehicle toward the circuit
         // center; it does not create steering or move the car when stationary.
         const distanceFromTrack = findNearestTrackPoint();
-        if (trackGuideRef.current && speedMps > 0.5 && distanceFromTrack > 1.5) {
+        if ((trackGuideRef.current || beginnerModeRef.current) && speedMps > 0.5 && distanceFromTrack > 1.5) {
           const nearest = samples[sim.nearestIndex];
           const correction = Math.min(1, dt * 0.65);
           sim.x += (nearest.x - sim.x) * correction;
@@ -461,6 +474,7 @@ export default function HomePage() {
       {settingsOpen && <div className="settings-backdrop" role="presentation" onClick={() => setSettingsOpen(false)}>
         <section className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
           <div className="settings-dialog-head"><div><p className="sim-eyebrow">RACING OPTIONS</p><h2 id="settings-title">설정</h2></div><button type="button" className="settings-close" onClick={() => setSettingsOpen(false)} aria-label="설정 닫기">✕</button></div>
+          <div className="settings-option"><span><strong>초보자 모드</strong><small>{beginnerMode ? "최고 속도 160km/h · 가속 완화 · 주행 보조 ON" : "속도와 주행 보조를 직접 조절합니다."}</small></span><button type="button" className={"steering-assist-toggle " + (beginnerMode ? "assist-enabled" : "assist-disabled")} aria-pressed={beginnerMode} onClick={toggleBeginnerMode}>{beginnerMode ? "ON" : "OFF"}</button></div>
           <div className="settings-option"><span><strong>스티어링 보정</strong><small>{steeringAssist ? "조향 입력을 부드럽게 보정합니다." : "보정 없이 입력을 즉시 적용합니다."}</small></span><button type="button" className={"steering-assist-toggle " + (steeringAssist ? "assist-enabled" : "assist-disabled")} aria-pressed={steeringAssist} onClick={toggleSteeringAssist}>{steeringAssist ? "ON" : "OFF"}</button></div>
           <div className="settings-option"><span><strong>트랙 주행 보조</strong><small>{trackGuide ? "차량이 트랙 중앙 쪽으로 부드럽게 복귀합니다." : "자동으로 트랙을 따라가지 않습니다."}</small></span><button type="button" className={"steering-assist-toggle " + (trackGuide ? "assist-enabled" : "assist-disabled")} aria-pressed={trackGuide} onClick={() => { setTrackGuide(v => { trackGuideRef.current = !v; return !v; }); }}>{trackGuide ? "ON" : "OFF"}</button></div>
           <p className="settings-note">트랙 주행 보조는 설정에서 언제든 켜고 끌 수 있어.</p>
