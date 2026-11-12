@@ -7,7 +7,6 @@ type Control = "left" | "right" | "gas" | "brake";
 type Controls = Record<Control, boolean>;
 const emptyControls: Controls = { left: false, right: false, gas: false, brake: false };
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-const trackLengthForCurvature = (curve: THREE.CatmullRomCurve3) => curve.getLength();
 
 const fmtTime = (v: number) => {
   const t = Math.max(0, v);
@@ -233,45 +232,53 @@ export default function HomePage() {
     }
     scene.add(car);
 
-    const sim = { running: false, speed: 0, angle: 0, lateral: 0, headingOffset: 0, steer: 0,
-      lapElapsed: 0, lap: 1, lapTimes: [] as number[], offTrack: false, lastUi: 0, lastFrame: 0 };
+    const trackSampleCount = samples.length - 1;
+    const initialPoint = centerCurve.getPointAt(0);
+    const initialTangent = centerCurve.getTangentAt(0).normalize();
+    const sim = {
+      running: false, speed: 0, angle: 0, steer: 0,
+      x: initialPoint.x, z: initialPoint.z,
+      heading: Math.atan2(initialTangent.x, initialTangent.z),
+      nearestIndex: 0, previousNearestIndex: 0,
+      lapElapsed: 0, lap: 1, lapTimes: [] as number[],
+      offTrack: false, lastUi: 0, lastFrame: 0
+    };
+    const findNearestTrackPoint = () => {
+      let bestIndex = sim.nearestIndex;
+      let bestDistanceSq = Infinity;
+      // Search locally around the previous projection to avoid a full-track
+      // scan every frame while still handling the start/finish wrap.
+      for (let offset = -36; offset <= 36; offset++) {
+        const index = (sim.nearestIndex + offset + trackSampleCount * 2) % trackSampleCount;
+        const p = samples[index];
+        const dx = sim.x - p.x;
+        const dz = sim.z - p.z;
+        const distanceSq = dx * dx + dz * dz;
+        if (distanceSq < bestDistanceSq) {
+          bestDistanceSq = distanceSq;
+          bestIndex = index;
+        }
+      }
+      sim.nearestIndex = bestIndex;
+      return Math.sqrt(bestDistanceSq);
+    };
     const updateCarAndCamera = () => {
-      const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
-      const center = centerCurve.getPointAt(u);
-      const tangent = centerCurve.getTangentAt(u).normalize();
-      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
-      const guidedLateral = trackGuideRef.current ? sim.lateral * 0.25 : sim.lateral;
-
-      // Use the rear axle as the vehicle's motion reference. The rear axle
-      // follows the driven path; the chassis origin is placed one half-wheelbase
-      // forward from it, so steering makes the nose sweep around the rear axle
-      // instead of making the rear swing around a front pivot.
-      const rearAxle = center.clone().addScaledVector(normal, guidedLateral);
-
-      // Keep the chase camera aligned to the circuit tangent. Steering changes
-      // the car's heading while the rear axle remains the reference point.
-      const trackYaw = Math.atan2(tangent.x, tangent.z);
-      const headingYaw = trackYaw + sim.headingOffset;
-      car.rotation.y = headingYaw;
-      const forward = new THREE.Vector3(Math.sin(headingYaw), 0, Math.cos(headingYaw));
-      car.position.copy(rearAxle).addScaledVector(forward, 1.05);
+      // The chassis position and heading are independent world-space values.
+      // The rear axle is never translated sideways by steering.
+      car.rotation.y = sim.heading;
+      car.position.set(sim.x, 0, sim.z);
       const speedSteerFade = clamp(1.08 - sim.speed / 330, 0.24, 1);
-      const frontWheelAngle = sim.steer * 0.18 * speedSteerFade;
+      const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
       frontWheelSteering.forEach(wheel => { wheel.rotation.y = frontWheelAngle; });
       wheels.forEach(w => { w.rotation.x += sim.speed * 0.0008; });
 
-      // Follow only a small portion of lateral movement so the car stays framed
-      // without making the horizon swing left and right with every steering input.
-      const cameraAnchor = center.clone().addScaledVector(normal, guidedLateral * 0.22);
+      const forward = new THREE.Vector3(Math.sin(sim.heading), 0, Math.cos(sim.heading));
+      const cameraAnchor = new THREE.Vector3(sim.x, 0, sim.z);
       const behind = new THREE.Vector3(0, 18, -44)
-        .applyAxisAngle(new THREE.Vector3(0, 1, 0), trackYaw)
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), sim.heading)
         .add(cameraAnchor);
       camera.position.lerp(behind, 0.10);
-
-      // Aim along the track, not at the steering-rotated car body.
-      const target = center.clone()
-        .addScaledVector(normal, guidedLateral * 0.12)
-        .add(new THREE.Vector3(0, 4, 22).applyAxisAngle(new THREE.Vector3(0, 1, 0), trackYaw));
+      const target = cameraAnchor.clone().addScaledVector(forward, 22).add(new THREE.Vector3(0, 4, 0));
       camera.lookAt(target);
     };
     updateCarAndCamera();
@@ -279,7 +286,13 @@ export default function HomePage() {
     const onStart = () => { sim.running = true; sim.lastFrame = 0; };
     const onPause = () => { sim.running = false; controlsRef.current = { ...emptyControls }; };
     const onReset = () => {
-      Object.assign(sim, { running: false, speed: 0, angle: 0, lateral: 0, headingOffset: 0, steer: 0, lapElapsed: 0, lap: 1, lapTimes: [], offTrack: false, lastFrame: 0 });
+      Object.assign(sim, {
+        running: false, speed: 0, angle: 0, steer: 0,
+        x: initialPoint.x, z: initialPoint.z,
+        heading: Math.atan2(initialTangent.x, initialTangent.z),
+        nearestIndex: 0, previousNearestIndex: 0,
+        lapElapsed: 0, lap: 1, lapTimes: [], offTrack: false, lastFrame: 0
+      });
       updateCarAndCamera();
     };
     window.addEventListener("racing-start", onStart);
@@ -312,65 +325,60 @@ export default function HomePage() {
           320
         );
 
-        // Bicycle-model steering: the front wheels turn, creating yaw from
-        // forward speed. The chassis then travels along its heading instead of
-        // being pushed sideways by the steering input.
+        // Steering wheel input only changes the front axle angle. At zero
+        // speed the chassis and rear axle remain completely still.
         const steerResponse = steeringAssistRef.current ? 5.5 : 8;
         sim.steer += (steer - sim.steer) * Math.min(1, dt * steerResponse);
         const speedSteerFade = clamp(1.08 - speedKph / 330, 0.24, 1);
-        const frontWheelAngle = sim.steer * 0.18 * speedSteerFade;
-        const wheelbase = 2.17;
+        const frontWheelAngle = sim.steer * 0.34 * speedSteerFade;
         const speedMps = sim.speed / 3.6;
+        const wheelbase = 2.17;
         const grip = sim.offTrack ? 0.48 : 1;
-        const yawRate = (speedMps / wheelbase) * Math.tan(frontWheelAngle) * grip;
 
-        // The heading offset is relative to the track tangent, not an absolute
-        // world heading. As the circuit curves, its tangent rotates too. Subtract
-        // that track rotation so the rear axle follows the car's actual heading
-        // instead of accumulating a sideways drift relative to the circuit.
-        const u = ((sim.angle / (Math.PI * 2)) % 1 + 1) % 1;
-        const curveStep = 0.001;
-        const tangentBefore = centerCurve.getTangentAt((u - curveStep + 1) % 1).normalize();
-        const tangentAfter = centerCurve.getTangentAt((u + curveStep) % 1).normalize();
-        const yawBefore = Math.atan2(tangentBefore.x, tangentBefore.z);
-        const yawAfter = Math.atan2(tangentAfter.x, tangentAfter.z);
-        const tangentYawDelta = Math.atan2(
-          Math.sin(yawAfter - yawBefore),
-          Math.cos(yawAfter - yawBefore)
-        );
-        const trackCurvature = tangentYawDelta / (trackLengthForCurvature(centerCurve) * curveStep * 2);
-        sim.headingOffset += (yawRate - trackCurvature * speedMps) * dt;
-
-        // Rear-axle motion is projected into the track tangent/normal frame.
-        // The nose responds first to steering; the rear follows its new heading.
-        sim.lateral += Math.sin(sim.headingOffset) * speedMps * dt;
-        sim.lateral = clamp(sim.lateral, -24, 24);
-        if (trackGuideRef.current) {
-          sim.lateral *= Math.max(0, 1 - dt * 1.6);
-          sim.headingOffset *= Math.max(0, 1 - dt * 0.18);
+        // A front-wheel steering bicycle model: rear wheels remain aligned
+        // with the chassis, and the car turns only when moving forward.
+        if (speedMps > 0.015) {
+          const yawRate = (speedMps / wheelbase) * Math.tan(frontWheelAngle) * grip;
+          sim.heading += yawRate * dt;
+          const forwardX = Math.sin(sim.heading);
+          const forwardZ = Math.cos(sim.heading);
+          sim.x += forwardX * speedMps * dt;
+          sim.z += forwardZ * speedMps * dt;
         }
 
-        sim.offTrack = Math.abs(sim.lateral) > 8.8;
+        // Optional track guide gently nudges the vehicle toward the circuit
+        // center; it does not create steering or move the car when stationary.
+        const distanceFromTrack = findNearestTrackPoint();
+        if (trackGuideRef.current && speedMps > 0.5 && distanceFromTrack > 1.5) {
+          const nearest = samples[sim.nearestIndex];
+          const correction = Math.min(1, dt * 0.65);
+          sim.x += (nearest.x - sim.x) * correction;
+          sim.z += (nearest.z - sim.z) * correction;
+        }
+
+        const updatedDistance = findNearestTrackPoint();
+        sim.offTrack = updatedDistance > 8.8;
         if (sim.offTrack) {
-          // Runoff surface has much less grip and produces extra speed loss.
           sim.speed = Math.max(0, sim.speed - (22 + speedKph * 0.12) * dt);
-          sim.headingOffset *= Math.max(0, 1 - dt * 0.35);
         }
-        // No automatic corner speed limiter: braking into corners is entirely manual.
-        const trackLength = centerCurve.getLength();
-        // Resolve rear-axle velocity into the circuit's tangent and normal.
-        // Advancing the lap coordinate by the cosine component prevents the
-        // rear axle from moving sideways while still travelling at full
-        // forward speed (the visual "rear sliding out" artifact).
-        const forwardAlongTrack = Math.cos(sim.headingOffset);
-        sim.angle += (((sim.speed / 3.6) * forwardAlongTrack) / trackLength) * dt * (Math.PI * 2);
-        sim.lapElapsed += dt;
-        if (sim.angle >= Math.PI * 2) {
-          sim.angle -= Math.PI * 2; sim.lapTimes.push(sim.lapElapsed); sim.lap += 1; sim.lapElapsed = 0;
+
+        // Project the real world-space car position onto the circuit to update
+        // lap progress. This projection never drives or teleports the vehicle.
+        const previousIndex = sim.previousNearestIndex;
+        const currentIndex = sim.nearestIndex;
+        if (previousIndex > trackSampleCount * 0.82 && currentIndex < trackSampleCount * 0.18 && speedMps > 0.5) {
+          sim.lapTimes.push(sim.lapElapsed);
+          sim.lap += 1;
+          sim.lapElapsed = 0;
           const last = sim.lapTimes[sim.lapTimes.length - 1];
-          setLastLap(fmtTime(last)); setBestLap(fmtTime(Math.min(...sim.lapTimes)));
-          setLap(sim.lap); setMessage("LAP " + (sim.lap - 1) + " COMPLETE");
+          setLastLap(fmtTime(last));
+          setBestLap(fmtTime(Math.min(...sim.lapTimes)));
+          setLap(sim.lap);
+          setMessage("LAP " + (sim.lap - 1) + " COMPLETE");
         }
+        sim.previousNearestIndex = currentIndex;
+        sim.angle = (currentIndex / trackSampleCount) * Math.PI * 2;
+        sim.lapElapsed += dt;
         if (now - sim.lastUi > 100) {
           setSpeed(Math.round(sim.speed)); setGear(clamp(Math.floor(sim.speed / 42) + 1, 1, 8));
           setRpm(Math.round(3500 + (sim.speed % 42) / 42 * 5500));
